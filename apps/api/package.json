@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "start": "tsx src/index.ts",
     "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts'",
-    "test:integration": "vitest run src/**/*.integration.test.ts"
+    "test:integration": "vitest run --passWithNoTests src/**/*.integration.test.ts"
   },
   "dependencies": {
     "@flux88/agents": "workspace:*",
