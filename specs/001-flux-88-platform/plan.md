@@ -74,7 +74,7 @@ flowchart LR
 
     subgraph API["apps/api — Hono"]
         R[REST + SSE routes]
-        POL[Policy & Approval Engine<br/>default-deny]
+        POL["Policy and Approval Engine<br/>default-deny"]
         AUD[Audit writer]
     end
 
@@ -215,6 +215,24 @@ nine areas, audit trail, owner auth, Docker Compose up with zero credentials.
 Out (deferred): real LLM calls (P2), durable multi-step recovery beyond restart-safety
 (P2), QA automation by EGON (P2), GitHub/Discord live connectors + webhooks (P3), Trello
 (P4), video/sales pipelines (P4).
+
+## Prioritized Delivery Sequence
+
+1. **Phase 0b — scaffold** (next issue/PR): pnpm monorepo, Docker Compose
+   (postgres+pgvector, redis), `.env.example`, CI gates (lint/typecheck/test), empty apps
+   boot.
+2. **P1 slice 1 — US5 shell**: owner auth (constitution hardening), dashboard shell with
+   nine areas, agent directory seeded with all 18 agents, theme + reduced motion.
+3. **P1 slice 2 — US1 core**: task CRUD + state machine, DOC mock delegation, dependency
+   graph, timeline, audit trail.
+4. **P1 slice 3 — US3 Memory Vault**: entries, permissions, keyword search, pgvector
+   wiring with mock embedder, versioning/revocation.
+5. **P1 slice 4 — US2 approvals**: policy engine, approval inbox, single-use grants,
+   outbox.
+6. **P1 slice 5 — US4 hardening**: restart/failure-injection tests, budgets surface,
+   acceptance suite for scenarios 1–3, 6–10 (mock), demo polish.
+7. **Phase 2** real LLM execution → **Phase 3** GitHub/Discord → **Phase 4** Trello +
+   content pipelines (each via `/speckit-tasks` and owner GO per phase).
 
 ## Risks & Mitigations
 
