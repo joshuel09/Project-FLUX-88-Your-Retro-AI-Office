@@ -1,6 +1,14 @@
 /**
- * @flux88/agents — typed agent registry (18 configs + zod schema + prompts).
- * Phase 1: implement AgentConfig schema per specs/001-flux-88-platform/agents.md.
- * Personality fields are presentation-only and MUST never affect permissions.
+ * @flux88/agents — typed agent registry (18 configs + zod schema).
+ * Personality fields are presentation-only and MUST never affect permissions:
+ * policy code consumes PolicyConfig, which structurally excludes them.
  */
 export { AGENT_IDS, type AgentId } from '@flux88/core';
+export {
+  agentConfigSchema,
+  policyConfigSchema,
+  toPolicyConfig,
+  type AgentConfig,
+  type PolicyConfig,
+} from './schema.js';
+export { AGENT_CONFIGS, AGENT_CONFIG_BY_ID } from './configs.js';
