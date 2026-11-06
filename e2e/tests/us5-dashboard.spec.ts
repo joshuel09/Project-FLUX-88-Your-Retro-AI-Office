@@ -52,8 +52,8 @@ test('agent directory lists exactly 18 agents with the MOCK banner visible', asy
 
 test('agent detail shows permissions and blocks policy edits', async ({ page }) => {
   await page.goto('/clock-tower/agents/data');
-  await expect(page.getByRole('heading', { name: 'DATA' })).toBeVisible();
-  await expect(page.getByText('Prohibited operations')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'DATA', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Prohibited operations' })).toBeVisible();
   await expect(page.getByText(/requires\s+an approval request/)).toBeVisible();
   await expectNoA11yViolations(page);
 });
