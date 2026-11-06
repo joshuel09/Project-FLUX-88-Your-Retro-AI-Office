@@ -30,6 +30,7 @@ export async function truncateMutableTables(db: ReturnType<typeof connectTestDb>
       memory_versions,
       memory_entries,
       sessions,
+      owner,
       tasks
     RESTART IDENTITY CASCADE
   `);

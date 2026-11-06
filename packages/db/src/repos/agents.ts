@@ -17,7 +17,12 @@ export async function getAgent(db: Db, id: AgentId) {
 export async function updateAgentPresentation(
   db: Db,
   id: AgentId,
-  patch: { displayName?: string; personality?: string; roleSummary?: string; enabled?: boolean },
+  patch: {
+    displayName?: string | undefined;
+    personality?: string | undefined;
+    roleSummary?: string | undefined;
+    enabled?: boolean | undefined;
+  },
 ) {
   const [row] = await db
     .update(agents)
