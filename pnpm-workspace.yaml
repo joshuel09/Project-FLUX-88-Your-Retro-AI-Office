@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Constitution security requirement: never install dependency versions
+# published fewer than 7 days ago (minutes).
+minimumReleaseAge: 10080

@@ -14,7 +14,7 @@ acceptance contract for SC-001.
 ```sh
 git clone https://github.com/joshuel09/Project-FLUX-88-Your-Retro-AI-Office.git
 cd Project-FLUX-88-Your-Retro-AI-Office
-cp .env.example .env          # defaults: MOCK_LLM=true, all connectors=mock
+cp env.example .env           # defaults: MOCK_LLM=true, all connectors=mock
 pnpm install                  # respects minimumReleaseAge (≥7 days)
 docker compose -f infra/docker-compose.yml up -d   # postgres+pgvector, redis
 pnpm db:migrate && pnpm db:seed                    # 18 agents + simulated demo data
