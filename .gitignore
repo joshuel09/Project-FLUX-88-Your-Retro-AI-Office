@@ -2,5 +2,16 @@
 .claude/
 CLAUDE.md
 
+# Node / build output
+node_modules/
+dist/
+.next/
+*.tsbuildinfo
+coverage/
+
+# Secrets — never commit (use env.example as the template)
+.env
+.env.*
+
 # macOS
 .DS_Store

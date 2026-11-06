@@ -1,0 +1,37 @@
+name: flux-88
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: flux88-postgres
+    environment:
+      POSTGRES_USER: flux88
+      POSTGRES_PASSWORD: flux88_local_dev
+      POSTGRES_DB: flux88
+    ports:
+      - "5488:5432"
+    volumes:
+      - flux88-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flux88 -d flux88"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: flux88-redis
+    ports:
+      - "6388:6379"
+    volumes:
+      - flux88-redisdata:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  flux88-pgdata:
+  flux88-redisdata:

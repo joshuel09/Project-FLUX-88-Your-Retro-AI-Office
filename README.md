@@ -4,7 +4,25 @@ A retro-styled AI office project. Development follows a spec-driven workflow pow
 
 ## Status
 
-🚧 Early setup — specs and features coming soon.
+🚧 Phase 0 — specification merged, monorepo scaffold in place. The Phase 1 MVP
+(dashboard, 18 agents, task orchestration, Memory Vault, approvals) is specified in
+[`specs/001-flux-88-platform/`](specs/001-flux-88-platform/).
+
+## Local development
+
+```sh
+cp env.example .env                 # mock-first defaults, zero paid credentials
+pnpm install                        # Node 22+, pnpm 10 (corepack)
+pnpm db:up                          # PostgreSQL 17 + pgvector, Redis 7 (Docker)
+pnpm dev                            # web :3000, api :3001, worker
+```
+
+Gates: `pnpm typecheck && pnpm build && pnpm test` (also run in CI).
+
+Layout: `apps/` (web = Next.js dashboard, api = Hono + policy engine, worker =
+orchestration) and `packages/` (core, db, agents, memory, llm, connectors, config).
+See [`specs/001-flux-88-platform/plan.md`](specs/001-flux-88-platform/plan.md) for
+architecture and module boundaries.
 
 ## Development workflow
 
