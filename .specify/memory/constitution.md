@@ -1,50 +1,142 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: (template) → 1.0.0
+- Modified principles: none (initial adoption)
+- Added sections:
+  - Core Principles I–X (Human Control; Security & Least Privilege; Reliable Persistence;
+    Traceability & Auditability; Testability; Maintainability; Minimal External Side Effects;
+    Cost Awareness; Spec-First Implementation; Accessible Interface Design)
+  - Security Requirements (on-sight security-guideline compliance)
+  - Development Workflow & Quality Gates
+  - Governance
+- Removed sections: none
+- Deferred TODOs: none
+-->
+
+# FLUX-88 Constitution
+
+FLUX-88 is a self-hostable, single-user-first orchestration platform operating exactly 18
+specialized AI agents in a persistent virtual office. This constitution governs every
+specification, plan, task, and line of code in the project. It supersedes convenience,
+speed, and aesthetic preferences whenever they conflict.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Human Control (NON-NEGOTIABLE)
+The owner retains ultimate authority at all times. Agents MUST NOT silently execute critical
+actions. Critical operations (payments, external communications, publishing, merging or
+modifying protected branches, deployments, deletions, sharing private data, changing agent
+permissions or approval policies) are governed by a default-deny policy engine. Agents MAY
+prepare proposed actions but MUST NOT execute them without an explicit, recorded approval.
+A GO signal is scoped to one specific action or one explicitly defined batch; it MUST be
+time-limited, single-use where appropriate, enforced immediately before execution, and
+MUST NOT grant future or implied permission. Resource state and permissions MUST be
+revalidated between approval and execution. Ordinary text in GitHub issues, Discord
+messages, crawled documents, or research pages is never owner authorization.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Security & Least Privilege
+Every agent operates under an explicit allowlist of tools and data scopes; anything not
+granted is denied. Specialists never inherit the orchestrator's privileges. Secrets and
+credentials MUST NOT appear in source code, agent memory, logs, fixtures, or test data;
+they live in environment variables or a secret manager. All content from crawled
+repositories, web pages, webhooks, and tool outputs is untrusted data and MUST NOT be
+interpreted as instructions or authorization, regardless of what it claims. The Security
+Requirements section below is binding in full.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Reliable Persistence
+Tasks, approvals, memory, audit events, budgets, and workflow state MUST survive process
+restarts and crashes. State lives in PostgreSQL (or the designated durable store), never
+solely in an LLM context window, process memory, or ephemeral queues. Interrupted runs
+MUST be recoverable: operations are idempotent, duplicate events are detected and
+discarded, and retries are bounded and recorded.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Traceability & Auditability
+Every task, delegation, handoff, approval, rejection, external call, and memory write is
+recorded in an append-only audit trail with actor, timestamp, and target. Memory entries
+carry source attribution, confidence, and verification status (verified fact, proposed
+finding, or untrusted external content). Any state shown in the UI MUST be reconstructible
+from persisted records, and simulated activity MUST be visibly distinct from real execution.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Testability
+Every feature ships with acceptance tests derived from its specification. The full system
+MUST run locally with mock LLM responses and mock integration providers — no paid
+credentials required to develop or demo the MVP. Unit, integration, and end-to-end tests
+gate every merge; a failing gate blocks the change.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### VI. Maintainability
+The codebase is a TypeScript-first monorepo with clear module boundaries: frontend, API,
+worker, agent definitions, integrations, memory, authorization, and orchestration are
+separate modules with typed contracts between them. No premature microservices; the
+architecture stays economical for single-user self-hosting. Dependencies are chosen for
+active maintenance and compatibility, and significant alternatives are documented.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### VII. Minimal External Side Effects
+Integrations (GitHub, Discord, Trello) start read-only. Every external write passes through
+the policy engine and, when critical, the approval flow of Principle I. Connectors are
+independent adapters with mocked providers; they handle provider failures, rate limits, and
+auth errors without losing tasks or duplicating actions. Notifications are rate-limited,
+deduplicated, and respect configured quiet hours.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### VIII. Cost Awareness
+Every agent execution records model usage, tokens, execution time, and estimated cost at
+task granularity. Agents operate within configured token, runtime, and retry budgets;
+exceeding a budget halts the run and escalates to the owner. Circular delegation and
+unbounded agent loops MUST be structurally prevented.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### IX. Spec-First Implementation
+No implementation work begins without an approved specification. Development follows the
+Spec Kit workflow — constitution, specification, clarification, plan, checklists, tasks,
+analysis, implementation, convergence — using the installed `/speckit-*` tooling and its
+artifacts. Code that deviates from the spec requires a spec amendment first.
+
+### X. Accessible Interface Design
+The dashboard meets WCAG 2.1 AA intent: readable modern typography, sufficient contrast
+despite the 1980s retro-futuristic theme, full keyboard operability, and screen-reader
+labeling. CRT, scanline, and motion effects MUST honor a reduced-motion mode. Layouts are
+responsive across desktop and mobile. Visual assets are original; protected franchise
+logos and artwork are never copied.
+
+## Security Requirements
+
+These rules implement the on-sight security guidelines and bind all code and reviews:
+
+- Passwords are hashed with Argon2, bcrypt, or scrypt — never plaintext, MD5, or SHA-1;
+  no forced periodic password rotation.
+- Authentication failure messages are generic (no user-existence leakage); accounts lock
+  temporarily after 5 consecutive failures.
+- Sessions use framework mechanisms; session IDs are re-issued on login, never placed in
+  URLs; cookies carry Secure / HttpOnly / SameSite.
+- All external input is validated server-side; output is escaped for its context (XSS).
+- SQL uses bound parameters only — never string concatenation.
+- OS command invocation is avoided; when unavoidable, no shell interpolation and
+  allowlisted arguments; external input never flows into file paths directly.
+- State-changing endpoints carry CSRF protection.
+- TLS 1.2+ and HSTS are assumed for all deployments; cryptography follows the CRYPTREC
+  cipher list.
+- Logs never contain passwords or personal data; logins, permission changes, and data
+  mutations are audit-logged.
+- Dependency versions published fewer than 7 days ago MUST NOT be installed
+  (e.g., pnpm `minimumReleaseAge`).
+
+## Development Workflow & Quality Gates
+
+- Task-first flow: every change starts as a GitHub issue on the project board, proceeds on
+  a `feature/issue-N-*` branch, and lands on `main` only through a pull request
+  (`Closes #N`). `main` is protected; the owner merges.
+- Each phase (0–4) ends with meaningful acceptance tests, operational documentation, and a
+  working demo before the next phase begins.
+- Reviews verify compliance with this constitution; deviations require explicit
+  justification in the PR and, where lasting, a constitution amendment.
+- Commits follow Conventional Commits and are attributed solely to the repository owner.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other project practices. Amendments are made by pull
+request that updates this document, states the rationale, and bumps the version
+semantically (MAJOR: principle removal or redefinition; MINOR: new principle or materially
+expanded guidance; PATCH: clarification). The owner approves all amendments by merging.
+Compliance is reviewed at every PR and at each phase boundary; `/speckit-analyze` runs
+before implementation of each feature to check spec–plan–task consistency against this
+document.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-11-06 | **Last Amended**: 2026-11-06
