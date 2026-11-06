@@ -17,24 +17,24 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Add Drizzle ORM, drizzle-kit, postgres driver and vitest workspace config: update `packages/db/package.json`, create `packages/db/drizzle.config.ts`, root `vitest.workspace.ts`
-- [ ] T002 [P] Add Tailwind CSS v4 + shadcn/ui base to `apps/web` (`apps/web/tailwind.config.ts`, `apps/web/app/globals.css`, `apps/web/components/ui/`) with retro theme tokens on `:root` (neon cyan `#5df3ff`, magenta `#ff3df0`, navy `#0b1026`, amber `#ffd37a`) incl. dark/light + `prefers-reduced-motion` guards
-- [ ] T003 [P] Add Playwright e2e scaffold with axe-core accessibility fixture in `e2e/playwright.config.ts`, `e2e/fixtures/a11y.ts`
-- [ ] T004 [P] Add integration-test harness that starts Postgres+Redis via `infra/docker-compose.yml` and truncates between tests in `packages/db/src/testing/harness.ts`
+- [x] T001 Add Drizzle ORM, drizzle-kit, postgres driver and vitest workspace config: update `packages/db/package.json`, create `packages/db/drizzle.config.ts`, root `vitest.workspace.ts`
+- [x] T002 [P] Add Tailwind CSS v4 + shadcn/ui base to `apps/web` (`apps/web/tailwind.config.ts`, `apps/web/app/globals.css`, `apps/web/components/ui/`) with retro theme tokens on `:root` (neon cyan `#5df3ff`, magenta `#ff3df0`, navy `#0b1026`, amber `#ffd37a`) incl. dark/light + `prefers-reduced-motion` guards
+- [x] T003 [P] Add Playwright e2e scaffold with axe-core accessibility fixture in `e2e/playwright.config.ts`, `e2e/fixtures/a11y.ts`
+- [x] T004 [P] Add integration-test harness that starts Postgres+Redis via `infra/docker-compose.yml` and truncates between tests in `packages/db/src/testing/harness.ts`
 
 ## Phase 2: Foundational (blocking all stories)
 
-- [ ] T005 Implement full Drizzle schema per data-model.md (agents, tasks, task_dependencies, handoffs, agent_runs, approval_requests, approval_grants, memory_entries, memory_versions, audit_events, connector_accounts, notifications, budgets, owner, sessions, outbox) in `packages/db/src/schema/*.ts` + initial migration in `packages/db/migrations/`
-- [ ] T006 Enforce append-only audit_events (INSERT/SELECT only for app roles) and create a least-privilege worker DB role that cannot mint or consume approval grants (plan Security Boundary 3, CHK026) in `packages/db/migrations/` (CHK025)
-- [ ] T007 [P] Implement repositories with parameterized queries only in `packages/db/src/repos/*.ts` (tasks, agents, approvals, memory, audit, budgets)
-- [ ] T008 [P] Implement AgentConfig zod schema per agents.md in `packages/agents/src/schema.ts`; personality fields structurally excluded from policy types (CHK018)
-- [ ] T009 Author all 18 agent configs per agents.md mapping table in `packages/agents/src/configs/*.ts` + roster completeness test `packages/agents/src/configs.test.ts` (exactly 18, unique IDs, non-empty scopes/prohibitedOps/memory/budgets — CHK014)
-- [ ] T010 Seed script: 18 agents + demo data flagged `simulated: true` in `packages/db/src/seed.ts`, wired to `pnpm db:seed`
-- [ ] T011 Owner auth in `apps/api/src/auth/`: Argon2id (argon2 lib), login/logout/me routes, 5-failure lockout with generic errors, session re-issue on login, Secure/HttpOnly/SameSite cookies, CSRF middleware for mutations (constitution Security Requirements; CHK019–021)
-- [ ] T012 [P] Audit middleware: every mutation route writes an audit event (actor, action, target) in `apps/api/src/middleware/audit.ts` (FR-070)
-- [ ] T013 [P] SSE endpoint `/api/v1/events` streaming task/approval/audit/agent_status channels in `apps/api/src/routes/events.ts`
-- [ ] T014 [P] Typed API client for the web app in `apps/web/lib/api.ts` (hono client)
-- [ ] T015 Dashboard shell: layout with nine office-area navigation, login page, MOCK MODE banner, reduced-motion toggle in `apps/web/app/(office)/layout.tsx`, `apps/web/app/login/page.tsx`
+- [x] T005 Implement full Drizzle schema per data-model.md (agents, tasks, task_dependencies, handoffs, agent_runs, approval_requests, approval_grants, memory_entries, memory_versions, audit_events, connector_accounts, notifications, budgets, owner, sessions, outbox) in `packages/db/src/schema/*.ts` + initial migration in `packages/db/migrations/`
+- [x] T006 Enforce append-only audit_events (INSERT/SELECT only for app roles) and create a least-privilege worker DB role that cannot mint or consume approval grants (plan Security Boundary 3, CHK026) in `packages/db/migrations/` (CHK025)
+- [x] T007 [P] Implement repositories with parameterized queries only in `packages/db/src/repos/*.ts` (tasks, agents, approvals, memory, audit, budgets)
+- [x] T008 [P] Implement AgentConfig zod schema per agents.md in `packages/agents/src/schema.ts`; personality fields structurally excluded from policy types (CHK018)
+- [x] T009 Author all 18 agent configs per agents.md mapping table in `packages/agents/src/configs/*.ts` + roster completeness test `packages/agents/src/configs.test.ts` (exactly 18, unique IDs, non-empty scopes/prohibitedOps/memory/budgets — CHK014)
+- [x] T010 Seed script: 18 agents + demo data flagged `simulated: true` in `packages/db/src/seed.ts`, wired to `pnpm db:seed`
+- [x] T011 Owner auth in `apps/api/src/auth/`: Argon2id (argon2 lib), login/logout/me routes, 5-failure lockout with generic errors, session re-issue on login, Secure/HttpOnly/SameSite cookies, CSRF middleware for mutations (constitution Security Requirements; CHK019–021)
+- [x] T012 [P] Audit middleware: every mutation route writes an audit event (actor, action, target) in `apps/api/src/middleware/audit.ts` (FR-070)
+- [x] T013 [P] SSE endpoint `/api/v1/events` streaming task/approval/audit/agent_status channels in `apps/api/src/routes/events.ts`
+- [x] T014 [P] Typed API client for the web app in `apps/web/lib/api.ts` (hono client)
+- [x] T015 Dashboard shell: layout with nine office-area navigation, login page, MOCK MODE banner, reduced-motion toggle in `apps/web/app/(office)/layout.tsx`, `apps/web/app/login/page.tsx`
 
 **Checkpoint**: migrations + seed run clean; login works; `pnpm test` green.
 
@@ -44,7 +44,7 @@
 
 - [ ] T016 [P] [US5] Agent directory with department grouping + status badges in `apps/web/app/(office)/clock-tower/agents/page.tsx`, components in `apps/web/components/agents/`
 - [ ] T017 [P] [US5] Nine office-area pages with themed headers and per-area content slots in `apps/web/app/(office)/{clock-tower,hawkins-lab,arcade,garage,ghost-lab,front-desk,video-store,mall,memory-vault}/page.tsx`
-- [ ] T018 [P] [US5] Agents API routes GET `/agents`, GET `/agents/:id`, PATCH `/agents/:id/config` (registry-schema validated; non-policy fields editable immediately; policy-affecting fields return "approval required" until T040 wires `agent_config_change` through the approval flow) in `apps/api/src/routes/agents.ts`
+- [x] T018 [P] [US5] Agents API routes GET `/agents`, GET `/agents/:id`, PATCH `/agents/:id/config` (registry-schema validated; non-policy fields editable immediately; policy-affecting fields return "approval required" until T040 wires `agent_config_change` through the approval flow) in `apps/api/src/routes/agents.ts`
 - [ ] T019 [US5] Agent detail + permissions/rules viewer-editor (scopes, prohibited ops, budgets read-write; personality read-write) in `apps/web/app/(office)/clock-tower/agents/[id]/page.tsx`
 - [ ] T020 [P] [US5] Simulated-vs-real labeling component used by every feed/board (visual + aria-label) in `apps/web/components/simulated-badge.tsx` (FR-053, CHK035)
 - [ ] T021 [US5] e2e: login → visit all nine areas → 18 agents listed → axe passes → reduced-motion disables CRT/scanline effects in `e2e/tests/us5-dashboard.spec.ts`

@@ -7,8 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/index.js",
-    "test": "vitest run --exclude '**/*.integration.test.ts'",
+    "start": "tsx src/index.ts",
+    "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts'",
     "test:integration": "vitest run src/**/*.integration.test.ts"
   },
   "dependencies": {

@@ -12,7 +12,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --exclude '**/*.integration.test.ts'",
+    "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts'",
     "test:integration": "vitest run src/**/*.integration.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",

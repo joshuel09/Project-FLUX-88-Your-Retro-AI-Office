@@ -9,6 +9,32 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: flux88
+          POSTGRES_PASSWORD: flux88_local_dev
+          POSTGRES_DB: flux88
+        ports:
+          - 5488:5432
+        options: >-
+          --health-cmd "pg_isready -U flux88 -d flux88"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6388:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://flux88:flux88_local_dev@localhost:5488/flux88
+      REDIS_URL: redis://localhost:6388
     steps:
       - uses: actions/checkout@v4
 
@@ -30,5 +56,11 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Test
+      - name: Migrate and seed database
+        run: pnpm --filter @flux88/db db:migrate && pnpm --filter @flux88/db db:seed
+
+      - name: Unit tests
         run: pnpm test
+
+      - name: Integration tests
+        run: pnpm -r --if-present test:integration
