@@ -18,8 +18,11 @@ import { emitEvent, type SSEEvent } from './events.js';
 const config = loadConfig();
 
 const queueConnection = new Redis(config.REDIS_URL, { maxRetriesPerRequest: null });
-const orchestrateQueue = new Queue(QUEUE_ORCHESTRATE, { connection: queueConnection });
-const runQueue = new Queue(QUEUE_AGENT_RUN, { connection: queueConnection });
+// Finished jobs are removed so resume/reconcile can re-dispatch the same
+// deterministic job id; Postgres remains the idempotency gate.
+const defaultJobOptions = { removeOnComplete: true, removeOnFail: true };
+const orchestrateQueue = new Queue(QUEUE_ORCHESTRATE, { connection: queueConnection, defaultJobOptions });
+const runQueue = new Queue(QUEUE_AGENT_RUN, { connection: queueConnection, defaultJobOptions });
 
 const enqueue: TaskEnqueuer = {
   async orchestrate(taskId) {

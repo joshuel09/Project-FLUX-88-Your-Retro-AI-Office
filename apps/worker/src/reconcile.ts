@@ -4,7 +4,14 @@
  * resets in-flight subtasks, and re-enqueues every piece of non-terminal work
  * with deterministic job ids so nothing is lost or duplicated.
  */
-import { failInterruptedRuns, getTask, listSubtasks, listTasks, transitionTask } from '@flux88/db';
+import {
+  failInterruptedRuns,
+  getTask,
+  incrementTaskRetry,
+  listSubtasks,
+  listTasks,
+  transitionTask,
+} from '@flux88/db';
 
 import type { WorkerDeps } from './deps.js';
 import { afterSubtaskSettled } from './runner/index.js';
@@ -25,7 +32,10 @@ export async function reconcile(deps: WorkerDeps): Promise<{ resumed: number }> 
     });
     const ready = await transitionTask(deps.db, task.id, 'ready', { actorType: 'system', actorId: 'worker' });
     if (ready.ok) {
-      await deps.enqueueRun(task.id, ready.task.retryCount);
+      // The interrupted run consumed its idempotency key; count it as a
+      // retry so the re-dispatch claims a fresh one.
+      const attempt = await incrementTaskRetry(deps.db, task.id);
+      await deps.enqueueRun(task.id, attempt);
       resumed += 1;
     }
   }

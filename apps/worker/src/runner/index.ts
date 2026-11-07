@@ -144,18 +144,36 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
   if (!task || task.status !== 'ready' || !task.assigneeAgentId) return;
   const agentId = task.assigneeAgentId;
 
-  // Postgres is the idempotency gate (unique index on idempotency_key).
-  const run = await insertRunIfAbsent(deps.db, {
+  // Win the status transition FIRST (its WHERE-status guard makes duplicate
+  // deliveries lose here without consuming an idempotency key), then claim
+  // the run in Postgres (unique index on idempotency_key).
+  const moved = await transitionTask(deps.db, taskId, 'running', { actorType: 'agent', actorId: agentId });
+  if (!moved.ok) return; // duplicate delivery or paused/canceled meanwhile
+
+  let attempt = moved.task.retryCount;
+  let run = await insertRunIfAbsent(deps.db, {
     taskId,
     agentId,
-    idempotencyKey: `${taskId}:${task.retryCount}`,
+    idempotencyKey: `${taskId}:${attempt}`,
     simulated: task.simulated,
   });
-  if (!run) return; // duplicate delivery
-
-  const moved = await transitionTask(deps.db, taskId, 'running', { actorType: 'agent', actorId: agentId });
-  if (!moved.ok) {
-    await finishRun(deps.db, run.id, { status: 'failed', error: 'stale_status' });
+  if (!run) {
+    // A leftover row (e.g. failed before a reconcile bump) holds this key:
+    // take the next attempt number instead of silently stalling the task.
+    attempt = await incrementTaskRetry(deps.db, taskId);
+    run = await insertRunIfAbsent(deps.db, {
+      taskId,
+      agentId,
+      idempotencyKey: `${taskId}:${attempt}`,
+      simulated: task.simulated,
+    });
+  }
+  if (!run) {
+    await transitionTask(deps.db, taskId, 'blocked', {
+      actorType: 'system',
+      actorId: 'worker',
+      reason: 'run claim conflict',
+    });
     return;
   }
   await deps.publish({ channel: 'task', data: { taskId, status: 'running', agentId } });
@@ -213,11 +231,11 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
       action: 'run.failed',
       targetType: 'task',
       targetId: taskId,
-      payload: { code, attempt: task.retryCount },
+      payload: { code, attempt },
     });
 
     const retryBudget = Math.min(task.retryLimit, budgets.maxRetries);
-    if (task.retryCount < retryBudget) {
+    if (attempt < retryBudget) {
       const nextAttempt = await incrementTaskRetry(deps.db, taskId);
       await transitionTask(deps.db, taskId, 'blocked', {
         actorType: 'system',

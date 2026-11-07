@@ -25,8 +25,12 @@ export function createQueueBundle(redisUrl: string): QueueBundle {
   const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
   const publisher = new Redis(redisUrl);
 
-  const orchestrateQueue = new Queue(QUEUE_ORCHESTRATE, { connection });
-  const runQueue = new Queue(QUEUE_AGENT_RUN, { connection });
+  // removeOnComplete/removeOnFail: a finished job must not block re-dispatch
+  // of the same deterministic id (resume, reconcile). Dedupe still applies
+  // while a job is waiting or active; durability lives in Postgres, not here.
+  const defaultJobOptions = { removeOnComplete: true, removeOnFail: true };
+  const orchestrateQueue = new Queue(QUEUE_ORCHESTRATE, { connection, defaultJobOptions });
+  const runQueue = new Queue(QUEUE_AGENT_RUN, { connection, defaultJobOptions });
   const workers: Worker[] = [];
 
   return {

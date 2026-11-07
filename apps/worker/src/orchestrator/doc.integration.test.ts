@@ -105,7 +105,8 @@ describe('US1 — delegated task execution (scenario 1, mock mode)', () => {
       expect(Date.now() - startedAt).toBeLessThan(30_000); // SC-001
 
       const subtasks = await listSubtasks(db, goal.id);
-      expect(subtasks.map((t) => t.assigneeAgentId)).toEqual(['eleven', 'marty', 'egon']);
+      // Same-transaction inserts share a created_at; compare as a set.
+      expect(subtasks.map((t) => t.assigneeAgentId).sort()).toEqual(['egon', 'eleven', 'marty']);
       expect(subtasks.every((t) => t.status === 'completed')).toBe(true);
       expect(subtasks.every((t) => t.delegationDepth === 1)).toBe(true);
 
@@ -128,9 +129,43 @@ describe('US1 — delegated task execution (scenario 1, mock mode)', () => {
     30_000,
   );
 
+  it(
+    'pause then resume re-dispatches through the real queue (finished jobs do not block the id)',
+    async () => {
+      const task = await createTask(db, {
+        title: 'Implement the pause-resume probe',
+        creator: 'owner',
+        assigneeAgentId: 'marty',
+        status: 'ready',
+      });
+      // Pause before the queue delivers: the runner must no-op without
+      // consuming the idempotency key or leaving a stale completed job.
+      await transitionTask(db, task.id, 'blocked', {
+        actorType: 'owner',
+        actorId: 'session',
+        reason: 'paused_by_owner',
+      });
+      await deps.enqueueRun(task.id, 0);
+      await new Promise((resolve) => setTimeout(resolve, 1_000)); // job drains as a no-op
+
+      await transitionTask(db, task.id, 'ready', { actorType: 'owner', actorId: 'session' });
+      await deps.enqueueRun(task.id, 0); // same deterministic job id as before
+      await waitFor(
+        async () => (await getTask(db, task.id))?.status === 'completed',
+        20_000,
+        'resumed task completion through the queue',
+      );
+      const runs = await listRuns(db, task.id);
+      expect(runs.filter((r) => r.status === 'succeeded')).toHaveLength(1);
+    },
+    30_000,
+  );
+
   it('re-delivery of a finished run is a no-op (Postgres idempotency gate)', async () => {
     const completedGoals = await listTasks(db, { status: 'completed' });
-    const parent = completedGoals.find((t) => t.creator === 'owner' && !t.parentTaskId);
+    const parent = completedGoals.find(
+      (t) => t.creator === 'owner' && !t.parentTaskId && t.title.startsWith('Research 80s'),
+    );
     expect(parent).toBeDefined();
     if (!parent) return;
     const [subtask] = await listSubtasks(db, parent.id);

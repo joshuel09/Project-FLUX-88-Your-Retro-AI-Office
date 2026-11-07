@@ -37,6 +37,7 @@ event.
 | PATCH | /tasks/:id | Owner edits (priority, deadline, reassign) |
 | POST | /tasks/:id/transition | Guarded status transition |
 | POST | /tasks/:id/pause · /resume · /cancel | Workflow control (FR-014) |
+| POST | /tasks/:id/input | Owner input to a blocked task (artifact + unblock, FR-018) |
 | GET | /tasks/:id/timeline | Delegation/handoff timeline |
 
 ## Approvals
