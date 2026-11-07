@@ -69,12 +69,12 @@
 
 **Goal**: agents store/retrieve attributed knowledge under write-permission rules. **Independent test**: quickstart scenario 3 (SC-004).
 
-- [ ] T033 [P] [US3] Memory service: scopes, categories, verification status, versioning, revocation, dedupe-hash, conflict surfacing in `packages/memory/src/service.ts`
-- [ ] T034 [P] [US3] Keyword search via Postgres FTS + `Embedder` interface with deterministic mock embedder over pgvector in `packages/memory/src/search.ts`, `packages/memory/src/embedder.ts`
-- [ ] T035 [US3] Write-permission enforcement per (agent, category) from registry + secret-shaped content rejection (token/key/password patterns, with audit on rejection) in `packages/memory/src/write-rules.ts` (FR-023/024, CHK022)
-- [ ] T036 [US3] Memory API routes per contracts/api.md in `apps/api/src/routes/memory.ts`
-- [ ] T037 [P] [US3] Memory Vault UI: search (keyword/semantic toggle), entry detail with attribution/status/versions/conflicts, revoke action in `apps/web/app/(office)/memory-vault/`
-- [ ] T038 [US3] Integration test: scenario 3 (agent A writes verified lesson → agent B retrieves with attribution; forbidden-category write refused + audited; revoked entry hidden but versioned; untrusted entry labeled) in `packages/memory/src/service.integration.test.ts`
+- [x] T033 [P] [US3] Memory service: scopes, categories, verification status, versioning, revocation, dedupe-hash, conflict surfacing in `packages/memory/src/service.ts`
+- [x] T034 [P] [US3] Keyword search via Postgres FTS + `Embedder` interface with deterministic mock embedder over pgvector in `packages/memory/src/search.ts`, `packages/memory/src/embedder.ts`
+- [x] T035 [US3] Write-permission enforcement per (agent, category) from registry + secret-shaped content rejection (token/key/password patterns, with audit on rejection) in `packages/memory/src/write-rules.ts` (FR-023/024, CHK022)
+- [x] T036 [US3] Memory API routes per contracts/api.md in `apps/api/src/routes/memory.ts`
+- [x] T037 [P] [US3] Memory Vault UI: search (keyword/semantic toggle), entry detail with attribution/status/versions/conflicts, revoke action in `apps/web/app/(office)/memory-vault/`
+- [x] T038 [US3] Integration test: scenario 3 (agent A writes verified lesson → agent B retrieves with attribution; forbidden-category write refused + audited; revoked entry hidden but versioned; untrusted entry labeled) in `packages/memory/src/service.integration.test.ts`
 
 ## Phase 6: US2 — Human-in-the-loop approval (spec User Story 2)
 
