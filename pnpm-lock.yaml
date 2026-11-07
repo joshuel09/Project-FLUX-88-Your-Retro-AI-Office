@@ -22,6 +22,9 @@ importers:
       '@flux88/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@flux88/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       '@hono/node-server':
         specifier: ^1.13.8
         version: 1.19.17(hono@4.13.14)
@@ -240,13 +243,28 @@ importers:
 
   packages/memory:
     dependencies:
+      '@flux88/agents':
+        specifier: workspace:*
+        version: link:../agents
       '@flux88/core':
         specifier: workspace:*
         version: link:../core
+      '@flux88/db':
+        specifier: workspace:*
+        version: link:../db
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(@types/react@19.3.0)(postgres@3.4.9)(react@19.3.1)
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.5
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.5)(lightningcss@1.32.0)
 
 packages:
 

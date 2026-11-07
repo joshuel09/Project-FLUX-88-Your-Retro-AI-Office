@@ -13,6 +13,7 @@ import { requireOwner } from './middleware/auth.js';
 import { strictOrigin } from './middleware/origin.js';
 import { agentsRoutes } from './routes/agents.js';
 import { eventsRoutes } from './routes/events.js';
+import { memoryRoutes } from './routes/memory.js';
 import { tasksRoutes } from './routes/tasks.js';
 
 export interface AppDeps {
@@ -48,6 +49,7 @@ export function createApp(deps: AppDeps = {}) {
   protectedApi.use(requireOwner(db));
   protectedApi.route('/agents', agentsRoutes(db));
   protectedApi.route('/tasks', tasksRoutes(db, enqueue));
+  protectedApi.route('/memory', memoryRoutes(db));
   protectedApi.route('/events', eventsRoutes());
   app.route('/api/v1', protectedApi);
 

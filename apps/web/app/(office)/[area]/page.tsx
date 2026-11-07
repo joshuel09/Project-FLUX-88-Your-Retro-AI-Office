@@ -5,7 +5,8 @@ import { AgentDirectory } from '../../../components/agents/agent-directory';
 import { OFFICE_AREAS_META } from '../../../lib/areas';
 
 export function generateStaticParams() {
-  return OFFICE_AREAS_META.map((area) => ({ area: area.slug }));
+  // memory-vault has a dedicated static page (T037).
+  return OFFICE_AREAS_META.filter((area) => area.slug !== 'memory-vault').map((area) => ({ area: area.slug }));
 }
 
 const ACCENT_CLASS = {
