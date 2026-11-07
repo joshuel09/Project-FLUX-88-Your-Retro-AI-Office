@@ -90,6 +90,15 @@ describe('US3 — shared Memory Vault (scenario 3)', () => {
     const rejection = audits.find((a) => a.action === 'memory.secret_rejected');
     expect(rejection).toBeDefined();
     expect(JSON.stringify(rejection?.payload)).not.toContain('definitely-not-a-real-pw');
+
+    // The attribution field is persisted and searchable, so it is scanned too.
+    const viaAttribution = await writeMemory(db, embedder, eleven, {
+      category: 'shared',
+      title: 'Innocent title',
+      body: 'Innocent body.',
+      sourceAttribution: 'AKIAIOSFODNN7EXAMPLE', // canonical AWS docs example key
+    });
+    expect(viaAttribution).toMatchObject({ ok: false, code: 'secret_rejected' });
   });
 
   it('dedupes identical knowledge instead of duplicating it', async () => {

@@ -6,7 +6,7 @@
  */
 import { createHash } from 'node:crypto';
 
-import { and, asc, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, ne } from 'drizzle-orm';
 
 import type { PolicyConfig } from '@flux88/agents';
 import type { AgentId } from '@flux88/core';
@@ -76,9 +76,10 @@ export async function writeMemory(
 ): Promise<MemoryWriteResult> {
   const audit = actorAudit(actor);
 
-  // FR-024: secret-shaped content never lands in the vault. The audit names
-  // the matched pattern only — the content itself is never logged.
-  const secretPattern = detectSecretShaped(`${input.title}\n${input.body}`);
+  // FR-024: secret-shaped content never lands in the vault — including in
+  // the attribution field, which is also persisted and searchable. The audit
+  // names the matched pattern only; the content itself is never logged.
+  const secretPattern = detectSecretShaped(`${input.title}\n${input.body}\n${input.sourceAttribution ?? ''}`);
   if (secretPattern) {
     await writeAudit(db, {
       ...audit,
@@ -188,27 +189,22 @@ export async function getMemory(db: Db, id: string) {
   const conflicts =
     conflictIds.length === 0
       ? []
-      : await Promise.all(
-          conflictIds.map(async (cid) => {
-            const [c] = await db
-              .select({
-                id: memoryEntries.id,
-                title: memoryEntries.title,
-                author: memoryEntries.author,
-                verificationStatus: memoryEntries.verificationStatus,
-                revokedAt: memoryEntries.revokedAt,
-              })
-              .from(memoryEntries)
-              .where(eq(memoryEntries.id, cid));
-            return c ?? null;
-          }),
-        );
-  return { entry, versions, conflicts: conflicts.filter((c) => c !== null) };
+      : await db
+          .select({
+            id: memoryEntries.id,
+            title: memoryEntries.title,
+            author: memoryEntries.author,
+            verificationStatus: memoryEntries.verificationStatus,
+            revokedAt: memoryEntries.revokedAt,
+          })
+          .from(memoryEntries)
+          .where(inArray(memoryEntries.id, conflictIds));
+  return { entry, versions, conflicts };
 }
 
 export type MemoryActionResult =
   | { ok: true; entry: MemoryEntryRow }
-  | { ok: false; code: 'not_found' | 'forbidden'; message: string };
+  | { ok: false; code: 'not_found' | 'forbidden' | 'secret_rejected'; message: string };
 
 function mayModify(actor: MemoryActor, entry: MemoryEntryRow): boolean {
   if (actor.kind === 'owner') return true;
@@ -237,7 +233,7 @@ export async function correctMemory(
       targetId: id,
       payload: { pattern: secretPattern, during: 'correction' },
     });
-    return { ok: false, code: 'forbidden', message: 'Correction looks like a credential or secret and was rejected.' };
+    return { ok: false, code: 'secret_rejected', message: 'Correction looks like a credential or secret and was rejected.' };
   }
 
   const embedding = await embedder.embed(`${entry.title}\n${patch.body}`);

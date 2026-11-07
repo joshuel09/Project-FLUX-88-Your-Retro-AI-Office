@@ -85,7 +85,8 @@ export function memoryRoutes(db: Db) {
 
     const result = await correctMemory(db, embedder, OWNER, id.data, body.data);
     if (!result.ok) {
-      return c.json({ error: { code: result.code, message: result.message } }, result.code === 'not_found' ? 404 : 403);
+      const status = result.code === 'not_found' ? 404 : result.code === 'secret_rejected' ? 422 : 403;
+      return c.json({ error: { code: result.code, message: result.message } }, status);
     }
     emitEvent({ channel: 'audit', data: { kind: 'memory.correct', memoryId: id.data } });
     return c.json(result.entry);
