@@ -1,10 +1,12 @@
 /**
- * @flux88/llm — provider abstraction (ClaudeProvider, MockProvider).
- * Phase 1 ships MockProvider only; Phase 2 adds Claude via @anthropic-ai/sdk.
+ * @flux88/llm — provider abstraction (MockProvider now, ClaudeProvider in
+ * Phase 2). Consumers depend on the LLMProvider interface only.
  */
-export interface LLMUsage {
-  inputTokens: number;
-  outputTokens: number;
-  costCents: number;
-}
-export const LLM_PACKAGE_PLACEHOLDER = 'phase-1' as const;
+export type { CompletionRequest, CompletionResult, LLMProvider, LLMUsage } from './provider.js';
+export {
+  DECOMPOSE_PREFIX,
+  MockProvider,
+  OVER_BUDGET_MARKER,
+  planForGoal,
+  type MockPlanStep,
+} from './mock.js';

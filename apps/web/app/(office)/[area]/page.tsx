@@ -32,6 +32,18 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
       {meta.slug === 'clock-tower' && (
         <nav aria-label="Clock Tower sections" className="flex flex-wrap gap-2">
           <Link
+            href="/clock-tower/tasks"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Task Board →
+          </Link>
+          <Link
+            href="/clock-tower/activity"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Activity Feed →
+          </Link>
+          <Link
             href="/clock-tower/agents"
             className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
           >
@@ -48,8 +60,7 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
       </section>
 
       <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/80">
-        Task boards, approvals, memory search and activity feeds arrive with the next slices (US1,
-        US3, US2).
+        Approvals and memory search arrive with the next slices (US3, US2).
       </p>
     </section>
   );

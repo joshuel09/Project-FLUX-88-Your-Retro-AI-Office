@@ -7,21 +7,26 @@ import { AGENT_IDS } from '@flux88/core';
 import { createDb, type Db } from '@flux88/db';
 
 import { authRoutes } from './auth/routes.js';
+import { noopEnqueuer, type TaskEnqueuer } from './enqueue.js';
 import { auditMutations } from './middleware/audit.js';
 import { requireOwner } from './middleware/auth.js';
 import { strictOrigin } from './middleware/origin.js';
 import { agentsRoutes } from './routes/agents.js';
 import { eventsRoutes } from './routes/events.js';
+import { tasksRoutes } from './routes/tasks.js';
 
 export interface AppDeps {
   config?: AppConfig;
   db?: Db;
+  /** BullMQ-backed in production (index.ts); defaults to a no-op for tests. */
+  enqueue?: TaskEnqueuer;
 }
 
 /** Build the Hono app — exported for tests (supertest-style via app.request). */
 export function createApp(deps: AppDeps = {}) {
   const config = deps.config ?? loadConfig();
   const db = deps.db ?? createDb(config.DATABASE_URL);
+  const enqueue = deps.enqueue ?? noopEnqueuer;
 
   const app = new Hono();
 
@@ -42,6 +47,7 @@ export function createApp(deps: AppDeps = {}) {
   const protectedApi = new Hono();
   protectedApi.use(requireOwner(db));
   protectedApi.route('/agents', agentsRoutes(db));
+  protectedApi.route('/tasks', tasksRoutes(db, enqueue));
   protectedApi.route('/events', eventsRoutes());
   app.route('/api/v1', protectedApi);
 
