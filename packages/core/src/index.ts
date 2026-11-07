@@ -70,6 +70,15 @@ export type AgentId = (typeof AGENT_IDS)[number];
 export const DEPARTMENTS = ['management', 'design', 'engineering', 'content_business'] as const;
 export type Department = (typeof DEPARTMENTS)[number];
 
+/**
+ * Shared infrastructure names (worker <-> API). Plain constants live here so
+ * both processes agree without a dependency between them.
+ */
+export const QUEUE_ORCHESTRATE = 'flux88-orchestrate';
+export const QUEUE_AGENT_RUN = 'flux88-agent-run';
+/** Redis pub/sub channel bridging worker events onto the API's SSE bus (T025). */
+export const EVENTS_CHANNEL = 'flux88:events';
+
 export const OFFICE_AREAS = [
   'clock-tower',
   'hawkins-lab',

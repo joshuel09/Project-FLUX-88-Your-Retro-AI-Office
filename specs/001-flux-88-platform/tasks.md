@@ -53,17 +53,17 @@
 
 **Goal**: create task → DOC decomposes via MockProvider → subtasks assigned → statuses progress → timeline visible. **Independent test**: quickstart scenario 1 (SC-002).
 
-- [ ] T022 [P] [US1] MockProvider: deterministic scripted completions + fake-but-consistent token/cost accounting in `packages/llm/src/mock.ts` (+ `LLMProvider` interface in `packages/llm/src/provider.ts`) (CHK044, CHK045)
-- [ ] T023 [P] [US1] Task state machine service wrapping `@flux88/core` guards with audit writes in `packages/core/src/task-machine.ts` + unit tests
-- [ ] T024 [US1] Tasks API: CRUD, transition, pause/resume/cancel, timeline per contracts/api.md in `apps/api/src/routes/tasks.ts`
-- [ ] T025 [US1] BullMQ queues + worker wiring with idempotency keys and startup reconciliation from Postgres in `apps/worker/src/queues/index.ts`, `apps/worker/src/reconcile.ts`
-- [ ] T026 [US1] DOC orchestrator: decomposition via MockProvider, skill-based assignee selection from agent registry, dependency-graph creation (DAG cycle check), delegation-depth limit, handoff records in `apps/worker/src/orchestrator/doc.ts`
-- [ ] T027 [US1] Agent runner: executes a subtask with the assigned agent's config + MockProvider, enforces per-run token/runtime/retry budgets, records agent_runs in `apps/worker/src/runner/index.ts`
-- [ ] T028 [P] [US1] Task board UI (columns per status, drag disabled in P1, detail drawer with artifacts/handoffs/costs) in `apps/web/app/(office)/clock-tower/tasks/`
-- [ ] T029 [P] [US1] Delegation timeline + activity feed (SSE-driven) in `apps/web/components/timeline/`, `apps/web/app/(office)/clock-tower/activity/page.tsx`
-- [ ] T030 [US1] Blocked-task escalation: blocker reason surfaces in UI, owner can reassign/provide input/cancel in `apps/api/src/routes/tasks.ts` + `apps/web/app/(office)/clock-tower/tasks/` (FR-018, CHK039)
-- [ ] T031 [US1] Integration test: scenario 1 end-to-end in mock mode (decomposition < 30s, correct specialists, timeline complete) in `apps/worker/src/orchestrator/doc.integration.test.ts`
-- [ ] T032 [US1] Loop-prevention unit tests: circular delegation refused + escalated, depth limit enforced in `apps/worker/src/orchestrator/loop-guards.test.ts` (FR-015)
+- [x] T022 [P] [US1] MockProvider: deterministic scripted completions + fake-but-consistent token/cost accounting in `packages/llm/src/mock.ts` (+ `LLMProvider` interface in `packages/llm/src/provider.ts`) (CHK044, CHK045)
+- [x] T023 [P] [US1] Task state machine service wrapping `@flux88/core` guards with audit writes in `packages/core/src/task-machine.ts` + unit tests
+- [x] T024 [US1] Tasks API: CRUD, transition, pause/resume/cancel, timeline per contracts/api.md in `apps/api/src/routes/tasks.ts`
+- [x] T025 [US1] BullMQ queues + worker wiring with idempotency keys and startup reconciliation from Postgres in `apps/worker/src/queues/index.ts`, `apps/worker/src/reconcile.ts`
+- [x] T026 [US1] DOC orchestrator: decomposition via MockProvider, skill-based assignee selection from agent registry, dependency-graph creation (DAG cycle check), delegation-depth limit, handoff records in `apps/worker/src/orchestrator/doc.ts`
+- [x] T027 [US1] Agent runner: executes a subtask with the assigned agent's config + MockProvider, enforces per-run token/runtime/retry budgets, records agent_runs in `apps/worker/src/runner/index.ts`
+- [x] T028 [P] [US1] Task board UI (columns per status, drag disabled in P1, detail drawer with artifacts/handoffs/costs) in `apps/web/app/(office)/clock-tower/tasks/`
+- [x] T029 [P] [US1] Delegation timeline + activity feed (SSE-driven) in `apps/web/components/timeline/`, `apps/web/app/(office)/clock-tower/activity/page.tsx`
+- [x] T030 [US1] Blocked-task escalation: blocker reason surfaces in UI, owner can reassign/provide input/cancel in `apps/api/src/routes/tasks.ts` + `apps/web/app/(office)/clock-tower/tasks/` (FR-018, CHK039)
+- [x] T031 [US1] Integration test: scenario 1 end-to-end in mock mode (decomposition < 30s, correct specialists, timeline complete) in `apps/worker/src/orchestrator/doc.integration.test.ts`
+- [x] T032 [US1] Loop-prevention unit tests: circular delegation refused + escalated, depth limit enforced in `apps/worker/src/orchestrator/loop-guards.test.ts` (FR-015)
 
 ## Phase 5: US3 — Shared Memory Vault (spec User Story 3)
 

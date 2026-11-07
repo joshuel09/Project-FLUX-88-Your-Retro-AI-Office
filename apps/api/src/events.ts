@@ -8,8 +8,8 @@ export interface SSEEvent {
 }
 
 /**
- * In-process event bus for SSE (T013). Worker→API bridging via Redis pub/sub
- * arrives with US1 (T025); this slice only needs API-originated events.
+ * In-process event bus for SSE (T013). Worker events arrive over Redis
+ * pub/sub (EVENTS_CHANNEL) and are republished here by index.ts (T025).
  */
 export const eventBus = new EventEmitter();
 eventBus.setMaxListeners(50);
