@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { AgentDirectory } from '../../../components/agents/agent-directory';
 import { OFFICE_AREAS_META } from '../../../lib/areas';
 
 export function generateStaticParams() {
@@ -12,21 +14,43 @@ const ACCENT_CLASS = {
   amber: 'text-amber-warm',
 } as const;
 
+/** Nine themed office areas, each listing its stationed agents (T017, FR-050). */
 export default async function OfficeAreaPage({ params }: { params: Promise<{ area: string }> }) {
   const { area } = await params;
   const meta = OFFICE_AREAS_META.find((a) => a.slug === area);
   if (!meta) notFound();
 
   return (
-    <section aria-labelledby="area-title">
-      <h1 id="area-title" className={`neon-glow text-2xl font-bold ${ACCENT_CLASS[meta.accent]}`}>
-        {meta.name}
-      </h1>
-      <p className="mt-1 text-sm text-cyan-soft">{meta.purpose}</p>
-      <div className="mt-6 border border-dashed border-navy-700 p-6 text-sm text-amber-warm">
-        This area comes online with the next slices (US5 agent directory, US1 task board, US3
-        memory search, US2 approval inbox). Shell navigation is live.
-      </div>
+    <section aria-labelledby="area-title" className="flex flex-col gap-6">
+      <header>
+        <h1 id="area-title" className={`neon-glow text-2xl font-bold ${ACCENT_CLASS[meta.accent]}`}>
+          {meta.name}
+        </h1>
+        <p className="mt-1 text-sm text-cyan-soft">{meta.purpose}</p>
+      </header>
+
+      {meta.slug === 'clock-tower' && (
+        <nav aria-label="Clock Tower sections" className="flex flex-wrap gap-2">
+          <Link
+            href="/clock-tower/agents"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Agent Directory →
+          </Link>
+        </nav>
+      )}
+
+      <section aria-labelledby="area-agents">
+        <h2 id="area-agents" className="mb-2 text-sm uppercase tracking-widest text-amber-warm">
+          Stationed agents
+        </h2>
+        <AgentDirectory areaFilter={meta.slug} />
+      </section>
+
+      <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/80">
+        Task boards, approvals, memory search and activity feeds arrive with the next slices (US1,
+        US3, US2).
+      </p>
     </section>
   );
 }

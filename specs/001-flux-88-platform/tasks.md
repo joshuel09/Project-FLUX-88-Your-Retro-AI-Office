@@ -42,12 +42,12 @@
 
 **Goal**: all nine areas navigable, agent directory live, a11y baseline. **Independent test**: quickstart scenario 7 + SC-001.
 
-- [ ] T016 [P] [US5] Agent directory with department grouping + status badges in `apps/web/app/(office)/clock-tower/agents/page.tsx`, components in `apps/web/components/agents/`
-- [ ] T017 [P] [US5] Nine office-area pages with themed headers and per-area content slots in `apps/web/app/(office)/{clock-tower,hawkins-lab,arcade,garage,ghost-lab,front-desk,video-store,mall,memory-vault}/page.tsx`
+- [x] T016 [P] [US5] Agent directory with department grouping + status badges in `apps/web/app/(office)/clock-tower/agents/page.tsx`, components in `apps/web/components/agents/`
+- [x] T017 [P] [US5] Nine office-area pages with themed headers and per-area content slots in `apps/web/app/(office)/{clock-tower,hawkins-lab,arcade,garage,ghost-lab,front-desk,video-store,mall,memory-vault}/page.tsx`
 - [x] T018 [P] [US5] Agents API routes GET `/agents`, GET `/agents/:id`, PATCH `/agents/:id/config` (registry-schema validated; non-policy fields editable immediately; policy-affecting fields return "approval required" until T040 wires `agent_config_change` through the approval flow) in `apps/api/src/routes/agents.ts`
-- [ ] T019 [US5] Agent detail + permissions/rules viewer-editor (scopes, prohibited ops, budgets read-write; personality read-write) in `apps/web/app/(office)/clock-tower/agents/[id]/page.tsx`
-- [ ] T020 [P] [US5] Simulated-vs-real labeling component used by every feed/board (visual + aria-label) in `apps/web/components/simulated-badge.tsx` (FR-053, CHK035)
-- [ ] T021 [US5] e2e: login → visit all nine areas → 18 agents listed → axe passes → reduced-motion disables CRT/scanline effects in `e2e/tests/us5-dashboard.spec.ts`
+- [x] T019 [US5] Agent detail + permissions/rules viewer-editor (scopes, prohibited ops, budgets read-write; personality read-write) in `apps/web/app/(office)/clock-tower/agents/[id]/page.tsx`
+- [x] T020 [P] [US5] Simulated-vs-real labeling component used by every feed/board (visual + aria-label) in `apps/web/components/simulated-badge.tsx` (FR-053, CHK035)
+- [x] T021 [US5] e2e: login → visit all nine areas → 18 agents listed → axe passes → reduced-motion disables CRT/scanline effects in `e2e/tests/us5-dashboard.spec.ts`
 
 ## Phase 4: US1 — Delegated task execution (spec User Story 1)
 
