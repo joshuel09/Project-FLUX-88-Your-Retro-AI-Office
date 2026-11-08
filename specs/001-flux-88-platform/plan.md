@@ -39,8 +39,7 @@ paid credentials (mock LLM + mock providers)
 parallel agent runs (default 3)
 
 **Constraints**: Single-owner deployment; everything recoverable after restart (SC-003);
-no external side effects without policy-engine authorization; dependency versions must be
-≥ 7 days old (pnpm `minimumReleaseAge: 10080`)
+no external side effects without policy-engine authorization
 
 **Scale/Scope**: 1 owner, 18 agents, thousands of tasks/memory entries; ~11 dashboard
 views; no multi-tenant scaling requirements through P4

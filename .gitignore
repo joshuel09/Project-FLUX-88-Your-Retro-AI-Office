@@ -1,6 +1,7 @@
-# Claude Code local config — do not upload
-.claude/
-CLAUDE.md
+# Keep local agent settings private; share only generated Claude skills.
+.claude/*
+!.claude/skills/
+.codex/
 
 # Node / build output
 node_modules/
@@ -16,3 +17,7 @@ coverage/
 # macOS
 .DS_Store
 e2e/test-results/
+
+# Python validation helpers
+__pycache__/
+*.pyc
