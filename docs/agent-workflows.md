@@ -51,5 +51,15 @@ still requires a manual smoke check; file discovery is not proof of model behavi
 Mandatory translations and company-specific command conventions are excluded. Company
 references, the CRYPTREC mandate, and the fixed seven-day dependency restriction were
 removed. Secrets protection, input validation, application runtime authorization,
-acceptance coverage, issue/branch/PR tracking, owner merging, and attribution preferences
+acceptance coverage, issue/branch/PR tracking, automatic review/merge under owner authorization, and attribution preferences
 remain project requirements. This migration changes no application approval behavior.
+
+## Automatic PR review and merge
+
+The owner authorizes both coding agents to review and merge PRs for authorized work
+without repeated confirmation. Follow `.agents/skills/github-workflow/SKILL.md`: review
+and fix findings, wait for checks on the latest head, verify no blocking findings or
+explicit holds remain, and merge that exact head. Repository approval requirements
+still apply; self-review cannot stand in for a required independent approval. Mark the
+linked board item Done only after confirming merge and issue closure. Merge authorization
+does not authorize deployment, releases, or bypassing branch protections.

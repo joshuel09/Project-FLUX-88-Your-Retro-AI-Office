@@ -9,7 +9,11 @@ it explicitly overrides a repository preference. Reply in English unless asked o
   https://github.com/users/joshuel09/projects/4, then use a feature branch and a PR
   closing the issue. Read `.agents/skills/github-workflow/SKILL.md`.
 - Read-only reviews and migration plans do not require issues or branches.
-- Never commit directly to `main`, force-push it, or delete it. The owner merges PRs.
+- Never commit directly to `main`, force-push it, or delete it.
+- Automatically review PRs for authorized work, fix blocking findings, and merge once
+  required checks pass and no blockers remain. The owner has authorized this workflow;
+  do not ask again for review or merge confirmation. Respect any task-specific hold,
+  draft status, repository rules, or failed checks. Never bypass branch protections.
 - Commit as Josusama / 46719153+joshuel09@users.noreply.github.com. Do not change global
   git identity. Do not add co-author trailers or agent-generated attribution footers.
 

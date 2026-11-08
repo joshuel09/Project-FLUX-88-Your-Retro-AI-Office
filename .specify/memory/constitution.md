@@ -1,6 +1,6 @@
 <!--
 Sync Impact Report
-- Version: 1.0.0 → 2.0.0 (remove company-specific constraints; clarify coding-agent scope)
+- Version: 1.0.0 → 2.1.0 (authorize automatic coding-agent review and merge)
 - Shared agent rules: AGENTS.md; execution adapters: .specify/agent-compatibility.md
 - Retained: product runtime approvals, security, persistence, auditability, acceptance tests
 - Updated: skills, tasks template, dependency configuration, plan/research/quickstart references
@@ -120,7 +120,8 @@ These project security requirements apply to product code and reviews:
 
 - Task-first flow: every change starts as a GitHub issue on the project board, proceeds on
   a `feature/issue-N-*` branch, and lands on `main` only through a pull request
-  (`Closes #N`). `main` is protected; the owner merges.
+  (`Closes #N`). `main` is protected; coding agents may merge reviewed, passing PRs under the owner's
+  standing authorization in `AGENTS.md`, without bypassing protections.
 - Each phase (0–4) ends with meaningful acceptance tests, operational documentation, and a
   working demo before the next phase begins.
 - Reviews verify compliance with this constitution; deviations require explicit
@@ -132,9 +133,10 @@ These project security requirements apply to product code and reviews:
 This constitution supersedes all other project practices. Amendments are made by pull
 request that updates this document, states the rationale, and bumps the version
 semantically (MAJOR: principle removal or redefinition; MINOR: new principle or materially
-expanded guidance; PATCH: clarification). The owner approves all amendments by merging.
+expanded guidance; PATCH: clarification). The owner may approve amendments directly or authorize coding agents to review and merge
+them through the shared PR workflow.
 Compliance is reviewed at every PR and at each phase boundary; `/speckit-analyze` runs
 before implementation of each feature to check spec–plan–task consistency against this
 document.
 
-**Version**: 2.0.0 | **Ratified**: 2026-11-06 | **Last Amended**: 2026-11-08
+**Version**: 2.1.0 | **Ratified**: 2026-11-06 | **Last Amended**: 2026-11-08
