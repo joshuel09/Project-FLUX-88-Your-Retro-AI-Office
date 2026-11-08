@@ -2,7 +2,3 @@ packages:
   - apps/*
   - packages/*
   - e2e
-
-# Constitution security requirement: never install dependency versions
-# published fewer than 7 days ago (minutes).
-minimumReleaseAge: 10080

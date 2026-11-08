@@ -5,11 +5,11 @@
 ## D1. Monorepo tooling
 
 - **Decision**: pnpm workspaces, no Nx/Turborepo at P0–P1.
-- **Rationale**: Three apps + seven packages is small; pnpm gives workspace linking,
-  `minimumReleaseAge` (constitution dependency-age rule) and fast installs without extra
+- **Rationale**: Three apps + seven packages is small; pnpm gives workspace linking
+  and fast installs without extra
   build-graph tooling. Turborepo can be added later for caching without restructuring.
 - **Alternatives**: Turborepo (adds config now, value later), Nx (heavy for single-user
-  project), npm/yarn workspaces (no `minimumReleaseAge` equivalent).
+  project), npm/yarn workspaces (less aligned with the selected workspace tooling).
 
 ## D2. HTTP API framework
 

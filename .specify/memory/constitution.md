@@ -1,16 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: (template) → 1.0.0
-- Modified principles: none (initial adoption)
-- Added sections:
-  - Core Principles I–X (Human Control; Security & Least Privilege; Reliable Persistence;
-    Traceability & Auditability; Testability; Maintainability; Minimal External Side Effects;
-    Cost Awareness; Spec-First Implementation; Accessible Interface Design)
-  - Security Requirements (on-sight security-guideline compliance)
-  - Development Workflow & Quality Gates
-  - Governance
-- Removed sections: none
-- Deferred TODOs: none
+- Version: 1.0.0 → 2.0.0 (remove company-specific constraints; clarify coding-agent scope)
+- Shared agent rules: AGENTS.md; execution adapters: .specify/agent-compatibility.md
+- Retained: product runtime approvals, security, persistence, auditability, acceptance tests
+- Updated: skills, tasks template, dependency configuration, plan/research/quickstart references
 -->
 
 # FLUX-88 Constitution
@@ -19,6 +12,14 @@ FLUX-88 is a self-hostable, single-user-first orchestration platform operating e
 specialized AI agents in a persistent virtual office. This constitution governs every
 specification, plan, task, and line of code in the project. It supersedes convenience,
 speed, and aesthetic preferences whenever they conflict.
+
+## Scope
+
+Product runtime requirements govern the FLUX-88 application and its agents. Coding agents
+follow `AGENTS.md` and the user's authorized development task; runtime approval mechanics
+do not require extra GO signals for ordinary coding work. Instruction, documentation, and
+tooling maintenance may proceed from an approved issue/plan without a new product spec.
+Shared skills contain no company-specific command conventions or translation requirements.
 
 ## Core Principles
 
@@ -98,7 +99,7 @@ logos and artwork are never copied.
 
 ## Security Requirements
 
-These rules implement the on-sight security guidelines and bind all code and reviews:
+These project security requirements apply to product code and reviews:
 
 - Passwords are hashed with Argon2, bcrypt, or scrypt — never plaintext, MD5, or SHA-1;
   no forced periodic password rotation.
@@ -111,12 +112,9 @@ These rules implement the on-sight security guidelines and bind all code and rev
 - OS command invocation is avoided; when unavoidable, no shell interpolation and
   allowlisted arguments; external input never flows into file paths directly.
 - State-changing endpoints carry CSRF protection.
-- TLS 1.2+ and HSTS are assumed for all deployments; cryptography follows the CRYPTREC
-  cipher list.
+- Use TLS and HSTS for deployments and maintained cryptographic libraries with secure defaults.
 - Logs never contain passwords or personal data; logins, permission changes, and data
   mutations are audit-logged.
-- Dependency versions published fewer than 7 days ago MUST NOT be installed
-  (e.g., pnpm `minimumReleaseAge`).
 
 ## Development Workflow & Quality Gates
 
@@ -139,4 +137,4 @@ Compliance is reviewed at every PR and at each phase boundary; `/speckit-analyze
 before implementation of each feature to check spec–plan–task consistency against this
 document.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-06 | **Last Amended**: 2026-11-06
+**Version**: 2.0.0 | **Ratified**: 2026-11-06 | **Last Amended**: 2026-11-08
