@@ -4,8 +4,9 @@
  * the actor's readable categories and never return revoked entries; every
  * result carries attribution and verification status (FR-021).
  */
-import { and, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 
+import type { AgentId } from '@flux88/core';
 import { schema, type Db } from '@flux88/db';
 
 import type { Embedder } from './embedder.js';
@@ -26,6 +27,26 @@ export interface MemorySearchHit {
   createdAt: Date;
   /** FTS rank (keyword) or cosine similarity (semantic), higher is better. */
   score: number;
+}
+
+export interface MemorySearchOptions {
+  categories: MemoryCategory[];
+  limit?: number;
+  /** Trusted caller context, never supplied directly by an HTTP query. */
+  actor?: { kind: 'owner' } | { kind: 'agent'; agentId: AgentId };
+  projectId?: string;
+}
+
+function visibility(opts: MemorySearchOptions) {
+  if (opts.actor?.kind === 'owner') return undefined;
+  // Missing caller context fails closed to shared entries, even for broadly granted categories.
+  const shared = eq(memoryEntries.scope, 'shared');
+  if (opts.actor?.kind !== 'agent') return shared;
+  return or(
+    shared,
+    and(eq(memoryEntries.scope, 'private'), eq(memoryEntries.author, opts.actor.agentId)),
+    opts.projectId ? and(eq(memoryEntries.scope, 'project'), eq(memoryEntries.projectId, opts.projectId)) : undefined,
+  );
 }
 
 const hitColumns = {
@@ -52,7 +73,7 @@ function toHit(row: Omit<MemorySearchHit, 'score' | 'conflictsWith'> & { conflic
 export async function searchKeyword(
   db: Db,
   query: string,
-  opts: { categories: MemoryCategory[]; limit?: number },
+  opts: MemorySearchOptions,
 ): Promise<MemorySearchHit[]> {
   if (opts.categories.length === 0 || query.trim() === '') return [];
   const document = sql`to_tsvector('english', ${memoryEntries.title} || ' ' || ${memoryEntries.body})`;
@@ -64,6 +85,7 @@ export async function searchKeyword(
       and(
         isNull(memoryEntries.revokedAt),
         inArray(memoryEntries.category, opts.categories),
+        visibility(opts),
         sql`${document} @@ ${tsQuery}`,
       ),
     )
@@ -76,7 +98,7 @@ export async function searchSemantic(
   db: Db,
   embedder: Embedder,
   query: string,
-  opts: { categories: MemoryCategory[]; limit?: number },
+  opts: MemorySearchOptions,
 ): Promise<MemorySearchHit[]> {
   if (opts.categories.length === 0 || query.trim() === '') return [];
   const vector = JSON.stringify(await embedder.embed(query));
@@ -89,6 +111,7 @@ export async function searchSemantic(
         isNull(memoryEntries.revokedAt),
         isNotNull(memoryEntries.embedding),
         inArray(memoryEntries.category, opts.categories),
+        visibility(opts),
       ),
     )
     .orderBy(distance)

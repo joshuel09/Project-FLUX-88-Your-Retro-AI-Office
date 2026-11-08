@@ -24,4 +24,4 @@ export {
   type MemoryWriteInput,
   type MemoryWriteResult,
 } from './service.js';
-export { searchKeyword, searchSemantic, type MemorySearchHit } from './search.js';
+export { searchKeyword, searchSemantic, type MemorySearchHit, type MemorySearchOptions } from './search.js';

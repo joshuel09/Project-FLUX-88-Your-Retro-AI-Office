@@ -53,8 +53,8 @@ export function memoryRoutes(db: Db) {
     const categories = readableCategories(OWNER);
     const items =
       mode === 'semantic'
-        ? await searchSemantic(db, embedder, q, { categories })
-        : await searchKeyword(db, q, { categories });
+        ? await searchSemantic(db, embedder, q, { categories, actor: OWNER })
+        : await searchKeyword(db, q, { categories, actor: OWNER });
     return c.json({ mode, items });
   });
 
