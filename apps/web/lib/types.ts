@@ -120,6 +120,30 @@ export interface TimelineEntry {
   detail: Record<string, unknown>;
 }
 
+export type VerificationStatus = 'verified' | 'proposed' | 'untrusted';
+
+export interface MemoryHit {
+  id: string;
+  category: string;
+  title: string;
+  body: string;
+  author: string;
+  sourceAttribution: string;
+  verificationStatus: VerificationStatus;
+  confidence: number;
+  conflictsWith: string[];
+  createdAt: string;
+  score: number;
+}
+
+export interface MemoryEntryDetail {
+  entry: MemoryHit & { revokedAt: string | null; scope: string };
+  versions: Array<{ id: string; version: number; body: string; editedBy: string; changeNote: string; createdAt: string }>;
+  conflicts: Array<{ id: string; title: string; author: string; verificationStatus: VerificationStatus; revokedAt: string | null }>;
+}
+
+export const MEMORY_CATEGORIES = ['shared', 'project', 'private', 'dept', 'ops'] as const;
+
 export const DEPARTMENT_LABELS: Record<AgentSummary['department'], string> = {
   management: 'Management & Operations',
   design: 'Design — The Arcade',

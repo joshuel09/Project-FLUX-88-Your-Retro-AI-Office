@@ -9,12 +9,19 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --passWithNoTests src/service.integration.test.ts"
   },
   "dependencies": {
-    "@flux88/core": "workspace:*"
+    "@flux88/agents": "workspace:*",
+    "@flux88/core": "workspace:*",
+    "@flux88/db": "workspace:*",
+    "drizzle-orm": "^0.38.3"
   },
   "devDependencies": {
-    "typescript": "^5.7.3"
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   }
 }
