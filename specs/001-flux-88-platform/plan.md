@@ -108,9 +108,10 @@ flowchart LR
 ```
 
 Key boundary: **only the API process evaluates policy and mints approval grants**; the
-worker refuses connector writes that don't carry a valid, unconsumed grant, and connectors
-require the grant in their method signatures (capability style), so bypassing approval is a
-type error, not just a runtime check.
+API consumes a valid single-use capability in the same transaction as its immutable
+outbox record. The worker can deliver only that grant-bound record and revalidates at
+execution; it never mints or consumes grants directly. Opaque API-side capability types
+and persistent outbox/grant bindings enforce the boundary across process restarts.
 
 ## Project Structure
 
@@ -176,13 +177,13 @@ development, the latter ships with the product. `.claude/` is currently gitignor
 |---|---|---|
 | `apps/web` | Presentation, owner interactions | DB directly, connectors, LLM |
 | `apps/api` | AuthN/Z, policy + approvals, CRUD, SSE, audit writes | LLM calls, long-running work |
-| `apps/worker` | Orchestration, agent runs, connector I/O, schedules | HTTP auth, policy decisions (consumes grants only) |
+| `apps/worker` | Orchestration, agent runs, connector I/O, schedules | HTTP auth, policy decisions, minting/consuming grants |
 | `packages/core` | Domain types + state machines | I/O of any kind |
 | `packages/db` | Schema, migrations, repositories | Business rules |
 | `packages/agents` | Registry schema, 18 configs, prompt assembly | Execution, I/O |
 | `packages/memory` | Vault search/write rules, embeddings interface | Policy decisions |
 | `packages/llm` | Provider abstraction, token accounting | Task state |
-| `packages/connectors` | Provider adapters + mocks, rate limits, dedupe | Executing without an ApprovalGrant for writes |
+| `packages/connectors` | Provider adapters + mocks, rate limits, dedupe | Executing writes without a valid grant-bound outbox action |
 
 ## Security Boundaries
 
@@ -192,10 +193,10 @@ development, the latter ships with the product. `.claude/` is currently gitignor
 2. **Dashboard ↔ API**: session-authenticated; all input zod-validated server-side; SSE
    for live updates.
 3. **Worker ↔ API/DB**: worker runs with its own least-privilege DB role; it cannot mint
-   approval grants.
+   or consume approval grants or create outbox actions (T040).
 4. **Agents ↔ world**: agents only reach the outside through connector adapters; connector
-   write methods require an unconsumed `ApprovalGrant`; reads are scope-checked against the
-   agent registry.
+   writes require the exact grant-bound outbox action; reads are scope-checked against
+   the agent registry. Capabilities are consumed only by the API before enqueueing.
 5. **External content ingress**: webhook payloads, crawled files, and LLM tool outputs are
    tagged `untrusted` at the boundary and keep that tag through memory and prompts; prompt
    assembly renders untrusted content inside clearly delimited data blocks, never as

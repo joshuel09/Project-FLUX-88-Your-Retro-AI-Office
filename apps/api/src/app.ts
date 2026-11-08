@@ -11,6 +11,7 @@ import { noopEnqueuer, type TaskEnqueuer } from './enqueue.js';
 import { auditMutations } from './middleware/audit.js';
 import { requireOwner } from './middleware/auth.js';
 import { strictOrigin } from './middleware/origin.js';
+import { approvalRoutes } from './routes/approvals.js';
 import { agentsRoutes } from './routes/agents.js';
 import { eventsRoutes } from './routes/events.js';
 import { memoryRoutes } from './routes/memory.js';
@@ -47,6 +48,7 @@ export function createApp(deps: AppDeps = {}) {
 
   const protectedApi = new Hono();
   protectedApi.use(requireOwner(db));
+  protectedApi.route('/approvals', approvalRoutes(db));
   protectedApi.route('/agents', agentsRoutes(db));
   protectedApi.route('/tasks', tasksRoutes(db, enqueue));
   protectedApi.route('/memory', memoryRoutes(db));

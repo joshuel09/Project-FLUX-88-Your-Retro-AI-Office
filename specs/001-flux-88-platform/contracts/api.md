@@ -44,10 +44,23 @@ event.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | /approvals | Inbox (pending/decided; includes expiry) |
+| GET/POST | /approvals | List inbox / create an immutable proposal; inbox (pending/decided; includes expiry) |
 | GET | /approvals/:id | Full immutable request detail |
-| POST | /approvals/:id/approve | Mints single-use grant; scoped to this action/batch |
-| POST | /approvals/:id/reject | Reject with reason |
+| POST | /approvals/:id/approve | Fresh password reauthentication; mints one single-use grant for the exact action/batch |
+| POST | /approvals/:id/reject | Fresh password reauthentication; reject with a nonempty reason |
+
+Approval decisions accept `{ password, reason? }` (`reason` is required to reject).
+The password is verified server-side and never stored in a proposal, audit, or outbox.
+`POST /approvals` accepts action type/payload, target, impact, risks, expiry, optional
+requesting agent/task/batch identifiers. Omit the agent for an authenticated owner
+proposal. Unknown privilege fields are rejected. Every category uses single-use grants.
+
+A policy-affecting `PATCH /agents/:id/config` without a grant creates/reuses a pending
+owner proposal and returns 403 with `approvalRequestId`. This includes `enabled` changes.
+After approving, repeat the exact patch with `approvalGrantId`. Changed patches, targets,
+configuration snapshots, expired grants, and reused grants are refused. Successful
+consumption updates agent configuration and budget limits and records a completed local
+outbox action atomically. Presentation-only edits retain the existing direct path.
 
 Internal (worker-only, service credential): `POST /internal/grants/:id/consume` is **not**
 exposed; consumption happens in-process in the API via the outbox. Workers never mint or

@@ -15,6 +15,13 @@
       "when": 1793972356584,
       "tag": "0001_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794144137452,
+      "tag": "0002_tranquil_invaders",
+      "breakpoints": true
     }
   ]
 }

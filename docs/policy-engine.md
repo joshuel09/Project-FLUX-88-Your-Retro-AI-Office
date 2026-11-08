@@ -24,11 +24,13 @@ operations remain unmodeled and denied. All critical operations are denied, incl
 when tool and scope grants exist and `approvalRequired` is empty. This module does not
 execute tools, expose an HTTP route, mint approval grants, or consume capabilities.
 
-T040 adds the immutable approval lifecycle and transactional capability consumption;
+T040 implements the immutable approval lifecycle and transactional capability consumption
+in `approvals.ts` (see `docs/approval-lifecycle.md`);
 T041–T044 add proposals, outbox delivery, and execution-time revalidation. An allowed
 read decision here is not a reusable capability, and no `approved: true` field or text
-can authorize critical execution. Existing policy-changing config routes remain denied
-until the approval layer is implemented.
+can authorize critical execution. Policy-changing config routes now create approval proposals and apply only the exact
+approved patch through capability consumption. The pure policy evaluator still cannot
+authorize a critical operation by itself.
 
 Run policy unit tests with `pnpm --filter @flux88/api test`. Run API integration tests
 against a separately migrated and seeded database via `DATABASE_URL` and
