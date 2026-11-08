@@ -27,6 +27,9 @@ Both agents use the same constitution, templates, and feature artifacts. Select 
 feature explicitly with `SPECIFY_FEATURE_DIRECTORY=specs/<feature>` when necessary;
 branch names and feature directory names are independent. Do not run modifying setup
 scripts during read-only reviews: even prerequisite helpers can persist feature state.
+For analysis, use `check-prerequisites.sh --json --paths-only`, which disables
+persistence, then validate required files with read-only operations. Skip all hooks
+during read-only reviews, including hooks marked mandatory.
 
 Product behavior requires acceptance coverage under the constitution. Generic upstream
 "tests optional" examples cannot waive that requirement. Documentation and tooling

@@ -31,7 +31,10 @@ The same `specs/` artifacts serve both agents. OpenSpec is not installed here.
 For a read-only review, give both agents the same feature directory and ask for a
 spec/plan/tasks consistency report without executing setup scripts or hooks. Compare
 requirement references and findings, not prose. Both should use English, the same
-constitution, and the same quality requirements.
+constitution, and the same quality requirements. For path resolution, use
+`check-prerequisites.sh --json --paths-only` and validate required artifacts separately.
+The analysis skill skips all hooks and never persists the selected feature. Regression
+tests cover both absent and existing feature state, plus missing task artifacts.
 
 For write smoke checks, copy `.specify`, `.agents`, `.claude/skills`, `AGENTS.md`, and
 `CLAUDE.md` to a disposable directory; never exercise generation against existing
