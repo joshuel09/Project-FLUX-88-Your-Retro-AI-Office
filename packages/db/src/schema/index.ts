@@ -1,5 +1,6 @@
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -160,7 +161,8 @@ export const artifacts = pgTable('artifacts', {
 /** Immutable after creation (FR-032); decision fields written once. */
 export const approvalRequests = pgTable('approval_requests', {
   id: uuid('id').primaryKey().defaultRandom(),
-  requestingAgentId: agentIdEnum('requesting_agent_id').notNull(),
+  requestingActorType: actorTypeEnum('requesting_actor_type').notNull().default('agent'),
+  requestingAgentId: agentIdEnum('requesting_agent_id'),
   taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'set null' }),
   actionType: approvalActionEnum('action_type').notNull(),
   actionPayload: jsonb('action_payload').notNull(),
@@ -169,12 +171,16 @@ export const approvalRequests = pgTable('approval_requests', {
   risks: text('risks').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   status: approvalStatusEnum('status').notNull().default('pending'),
+  decisionReason: text('decision_reason').notNull().default(''),
   decidedBy: text('decided_by'),
   decidedAt: timestamp('decided_at', { withTimezone: true }),
   batchId: uuid('batch_id'),
   dedupeKey: text('dedupe_key').notNull(),
   createdAt: createdAt(),
-});
+}, (t) => [
+  uniqueIndex('approval_requests_dedupe_idx').on(t.dedupeKey),
+  check('approval_request_actor_check', sql`(${t.requestingActorType} = 'owner' AND ${t.requestingAgentId} IS NULL) OR (${t.requestingActorType} = 'agent' AND ${t.requestingAgentId} IS NOT NULL)`),
+]);
 
 /** Single-use capability minted on approval (FR-033). */
 export const approvalGrants = pgTable(
@@ -340,5 +346,5 @@ export const outbox = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [uniqueIndex('outbox_idempotency_idx').on(t.idempotencyKey)],
+  (t) => [uniqueIndex('outbox_idempotency_idx').on(t.idempotencyKey), uniqueIndex('outbox_grant_idx').on(t.grantId)],
 );

@@ -269,6 +269,17 @@ sync cycles, and that quiet hours defer it. (Essential scenarios 4 and 5)
 - **FR-033 [P1]**: Approvals MUST be scoped to one action or one explicitly defined batch,
   time-limited, single-use where applicable, enforced immediately before execution, and
   recorded in the audit trail; resource state and permissions are revalidated at execution.
+  Phase 1 rules: all categories, including explicitly described batches, use one grant
+  for one exact payload and target; a batch identifier never authorizes repeated use.
+  New proposals expire between 1 minute and 24 hours after creation (default 15 minutes).
+  Each owner decision requires password reauthentication in a current session; its
+  in-process authorization expires after 60 seconds and permits one decision attempt.
+  Rejecting a request requires a nonempty reason (at most 1000 characters).
+  Owner-initiated administrative requests are labeled owner requests, not attributed
+  to an agent. Agent requests retain their actual identity and current permissions.
+  Agent configuration consumption compares the full configuration/enabled state and
+  update timestamp captured in the proposal; a changed or deleted target refuses
+  consumption and leaves the grant unused. Other executor revalidation is T044.
 - **FR-034 [P3]**: An optional Discord approval channel MUST verify the owner's identity
   before honoring an approval; text from any external source is never authorization.
 

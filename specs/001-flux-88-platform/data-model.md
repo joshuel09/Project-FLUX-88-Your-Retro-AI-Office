@@ -64,10 +64,11 @@ One LLM-or-mock execution of an agent against a task.
 - `idempotency_key` (dedupe, FR-017), `error?`, `simulated`
 
 ### approval_requests  *(immutable after creation)*
-- `id`, `requesting_agent_id`, `action_type` (one of FR-030 categories), `action_payload`
+- `id`, `requesting_actor_type` (owner|agent), `requesting_agent_id` (required for agents, null for owner requests), `action_type` (one of FR-030 categories), `action_payload`
   (exact proposed action), `target_resource`, `expected_impact`, `risks`, `expires_at`
-- `status` ∈ {pending, approved, rejected, expired}, `decided_by?`, `decided_at?`
-- `batch_id?` for explicitly defined batches (FR-033)
+- `status` ∈ {pending, approved, rejected, expired}, `decided_by?`, `decided_at?`, `decision_reason`
+- `dedupe_key` unique; immutable proposal and one-way decision fields are trigger-protected
+- `batch_id?` for explicitly defined batches (FR-033); every grant remains single-use for the whole exact payload
 
 ### approval_grants  *(single-use capability)*
 - `id`, `approval_request_id` (unique), `consumed_at?`, `consumed_by_run_id?`
