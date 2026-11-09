@@ -16,7 +16,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-import { AGENT_IDS, DEPARTMENTS, OFFICE_AREAS, TASK_STATUSES } from '@flux88/core';
+import { AGENT_IDS, CRITICAL_ACTION_CATEGORIES, DEPARTMENTS, OFFICE_AREAS, TASK_STATUSES } from '@flux88/core';
 
 export const taskStatusEnum = pgEnum('task_status', TASK_STATUSES);
 export const agentIdEnum = pgEnum('agent_id', AGENT_IDS);
@@ -28,19 +28,7 @@ export const taskOriginEnum = pgEnum('task_origin', ['local', 'github', 'trello'
 export const providerEnum = pgEnum('llm_provider', ['claude', 'mock']);
 export const runStatusEnum = pgEnum('run_status', ['queued', 'running', 'succeeded', 'failed', 'halted_budget']);
 export const approvalStatusEnum = pgEnum('approval_status', ['pending', 'approved', 'rejected', 'expired']);
-export const approvalActionEnum = pgEnum('approval_action', [
-  'payment',
-  'external_communication',
-  'publish_content',
-  'github_write',
-  'protected_branch_change',
-  'deployment_or_infra',
-  'delete_resource',
-  'share_private_externally',
-  'agent_config_change',
-  'policy_change',
-  'integration_write_enable',
-]);
+export const approvalActionEnum = pgEnum('approval_action', CRITICAL_ACTION_CATEGORIES);
 export const memoryScopeEnum = pgEnum('memory_scope', ['shared', 'project', 'private']);
 export const verificationStatusEnum = pgEnum('verification_status', ['verified', 'proposed', 'untrusted']);
 export const actorTypeEnum = pgEnum('actor_type', ['owner', 'agent', 'system', 'connector']);
@@ -350,3 +338,18 @@ export const outbox = pgTable(
   },
   (t) => [uniqueIndex('outbox_idempotency_idx').on(t.idempotencyKey), uniqueIndex('outbox_grant_idx').on(t.grantId)],
 );
+
+
+/** Durable worker-to-API inbox; only the API can create approval requests. */
+export const agentActionProposals = pgTable('agent_action_proposals', {
+  runId: uuid('run_id').primaryKey().references(() => agentRuns.id, { onDelete: 'cascade' }),
+  proposal: jsonb('proposal').notNull(),
+  status: text('status').notNull().default('pending'),
+  approvalRequestId: uuid('approval_request_id').references(() => approvalRequests.id),
+  rejectionCode: text('rejection_code'),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (t) => [
+  index('agent_action_proposals_pending_idx').on(t.status, t.createdAt),
+  check('agent_action_proposals_state', sql`(${t.status} = 'pending' AND ${t.approvalRequestId} IS NULL AND ${t.rejectionCode} IS NULL) OR (${t.status} = 'accepted' AND ${t.approvalRequestId} IS NOT NULL AND ${t.rejectionCode} IS NULL) OR (${t.status} = 'rejected' AND ${t.approvalRequestId} IS NULL AND ${t.rejectionCode} IS NOT NULL)`),
+]);

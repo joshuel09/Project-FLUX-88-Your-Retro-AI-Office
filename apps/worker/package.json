@@ -17,6 +17,7 @@
     "@flux88/core": "workspace:*",
     "@flux88/db": "workspace:*",
     "@flux88/llm": "workspace:*",
+    "@flux88/memory": "workspace:*",
     "bullmq": "^5.34.0",
     "drizzle-orm": "^0.38.3",
     "ioredis": "^5.4.2",

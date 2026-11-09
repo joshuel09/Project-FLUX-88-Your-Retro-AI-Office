@@ -12,6 +12,7 @@ import { loadConfig } from '@flux88/config';
 import { EVENTS_CHANNEL, QUEUE_AGENT_RUN, QUEUE_ORCHESTRATE } from '@flux88/core';
 
 import { createApp } from './app.js';
+import { startAgentProposalIntake } from './policy/agent-proposals.js';
 import type { TaskEnqueuer } from './enqueue.js';
 import { emitEvent, type SSEEvent } from './events.js';
 
@@ -44,7 +45,10 @@ subscriber.on('message', (_channel, message) => {
   }
 });
 
-const { app } = createApp({ config, enqueue });
+const { app, db } = createApp({ config, enqueue });
+const proposalIntake = startAgentProposalIntake(db, () => emitEvent({ channel: 'approval', data: { status: 'pending' } }), () => {
+  console.error('[flux88-api] agent proposal intake failed; retrying on next poll');
+});
 
 const server = serve({ fetch: app.fetch, port: config.API_PORT }, (info) => {
   console.log(`[flux88-api] listening on :${info.port} (mock LLM: ${config.MOCK_LLM})`);
@@ -54,7 +58,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     console.log(`[flux88-api] ${signal} received, shutting down`);
     server.close();
-    void Promise.all([orchestrateQueue.close(), runQueue.close(), queueConnection.quit(), subscriber.quit()]).finally(
+    void Promise.all([proposalIntake.close(), orchestrateQueue.close(), runQueue.close(), queueConnection.quit(), subscriber.quit()]).finally(
       () => process.exit(0),
     );
   });

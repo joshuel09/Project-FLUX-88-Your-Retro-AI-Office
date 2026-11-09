@@ -23,9 +23,10 @@ import {
 import type { CompletionResult } from '@flux88/llm';
 
 import type { WorkerDeps } from '../deps.js';
+import { stageProposedAction } from './proposals.js';
 
 class RunFailure extends Error {
-  constructor(public readonly code: 'budget_exceeded' | 'runtime_exceeded' | 'provider_error') {
+  constructor(public readonly code: 'budget_exceeded' | 'runtime_exceeded' | 'provider_error' | 'proposal_rejected') {
     super(code);
   }
 }
@@ -190,6 +191,14 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
     const result = await completeWithinBudget(deps, task, agentId, budgets);
     const durationMs = Date.now() - started;
 
+    if (result.proposedAction !== undefined) {
+      const staged = await stageProposedAction(deps.db, { taskId, runId: run.id, agentId, durationMs }, result);
+      if (!staged) throw new RunFailure('proposal_rejected');
+      // Redis is best-effort transport; the committed wait/inbox survives it.
+      await deps.publish({ channel: 'task', data: { taskId, status: 'awaiting_approval', agentId } }).catch(() => {});
+      return;
+    }
+
     await createArtifact(deps.db, {
       taskId,
       agentId,
@@ -234,7 +243,11 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
       payload: { code, attempt },
     });
 
-    const retryBudget = Math.min(task.retryLimit, budgets.maxRetries);
+    if (code === 'proposal_rejected') {
+      const current = await getTask(deps.db, taskId);
+      if (!current || current.status !== 'running' || current.assigneeAgentId !== agentId) return;
+    }
+    const retryBudget = code === 'proposal_rejected' ? 0 : Math.min(task.retryLimit, budgets.maxRetries);
     if (attempt < retryBudget) {
       const nextAttempt = await incrementTaskRetry(deps.db, taskId);
       await transitionTask(deps.db, taskId, 'blocked', {

@@ -81,3 +81,13 @@ export function detectSecretShaped(text: string): string | null {
   }
   return null;
 }
+
+
+/** Reject secret-shaped strings and explicit credential fields in validated JSON. */
+export function containsSecretMaterial(value: unknown): boolean {
+  if (typeof value === 'string') return detectSecretShaped(value) !== null;
+  if (Array.isArray(value)) return value.some(containsSecretMaterial);
+  if (value !== null && typeof value === 'object') return Object.entries(value).some(([key, item]) =>
+    (/^(password|passwd|api[_-]?key|secret|token|private[_-]?key)$/i.test(key) && typeof item === 'string' && item.length > 0) || containsSecretMaterial(item));
+  return false;
+}

@@ -3,10 +3,11 @@ import { createHash } from 'node:crypto';
 import { and, asc, desc, eq, gt, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { agentConfigSchema, policyConfigSchema } from '@flux88/agents';
+import { agentConfigSchema, policyConfigSchema, proposalSchema, type Json } from '@flux88/agents';
+export { proposalSchema, type ApprovalProposal } from '@flux88/agents';
 import { AGENT_IDS, type AgentId } from '@flux88/core';
 import { mockTargetStateHash, schema, type Db } from '@flux88/db';
-import { detectSecretShaped } from '@flux88/memory';
+import { containsSecretMaterial, detectSecretShaped } from '@flux88/memory';
 
 import { DUMMY_HASH_PROMISE, verifyPassword } from '../auth/passwords.js';
 import { evaluatePolicy } from './engine.js';
@@ -28,34 +29,6 @@ const actorSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('owner') }).strict(),
   z.object({ kind: z.literal('agent'), agentId: z.enum(AGENT_IDS) }).strict(),
 ]);
-type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
-const scalar = z.union([z.null(), z.boolean(), z.number().finite(), z.string()]);
-function jsonAtDepth(depth: number): z.ZodType<Json> {
-  if (depth === 0) return scalar;
-  const child = jsonAtDepth(depth - 1);
-  return z.union([scalar, z.array(child).max(1000), z.record(child).refine((v) => Object.keys(v).length <= 200)]);
-}
-const json = jsonAtDepth(20);
-function containsSecret(value: unknown): boolean {
-  if (typeof value === 'string') return detectSecretShaped(value) !== null;
-  if (Array.isArray(value)) return value.some(containsSecret);
-  if (value !== null && typeof value === 'object') return Object.entries(value).some(([key, item]) =>
-    (/^(password|passwd|api[_-]?key|secret|token|private[_-]?key)$/i.test(key) && typeof item === 'string' && item.length > 0) || containsSecret(item));
-  return false;
-}
-const payloadSchema = z.record(json).refine((v) => JSON.stringify(v).length <= 65_536);
-export const proposalSchema = z.object({
-  actionType: z.enum(schema.approvalActionEnum.enumValues),
-  actionPayload: payloadSchema,
-  targetResource: z.string().trim().min(1).max(500),
-  expectedImpact: z.string().trim().min(1).max(2000),
-  risks: z.string().trim().min(1).max(2000),
-  expiresAt: z.string().datetime(),
-  taskId: uuid.optional(),
-  // A batch is one explicitly described payload consumed once, never a multi-use grant.
-  batchId: uuid.optional(),
-}).strict();
-export type ApprovalProposal = z.infer<typeof proposalSchema>;
 const bindingSchema = proposalSchema.pick({ actionType: true, actionPayload: true, targetResource: true })
   .extend({ requester: actorSchema }).strict();
 export type ApprovalBinding = z.infer<typeof bindingSchema>;
@@ -100,7 +73,7 @@ export async function createApprovalRequest(db: Db | Tx, rawActor: ApprovalActor
   const expiry = new Date(input.expiresAt);
   const ttl = expiry.getTime() - Date.now();
   if (ttl < MIN_TTL_MS || ttl > MAX_APPROVAL_TTL_MS) return db.transaction((tx) => denied(tx, 'invalid_input'));
-  if (containsSecret(input)) return db.transaction((tx) => denied(tx, 'secret_rejected'));
+  if (containsSecretMaterial(input)) return db.transaction((tx) => denied(tx, 'secret_rejected'));
   const key = stateHash({ actor: identity.data, ...input, expiresAt: expiry.toISOString(), taskId: input.taskId ?? null, batchId: input.batchId ?? null });
   return db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${key}, 0))`);

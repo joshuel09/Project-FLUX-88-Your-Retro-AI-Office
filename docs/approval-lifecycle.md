@@ -102,3 +102,22 @@ Any missing, changed, expired, or mismatched state sets the outbox row to
 deduplicated dashboard notification. No mock effect runs. This covers mutable mock target
 state only; current external GitHub/Discord/Trello resource state cannot be queried until
 provider adapters exist, and live connectors remain refused.
+
+## T042 agent proposals
+
+A provider may return an untrusted `proposedAction` object. The runner validates it against
+the shared bounded critical-action schema and rejects secret-shaped fields before storing
+it. It does not parse prose, select an actor, approve the request, mint a grant or execute
+a tool. A valid proposal and its task `awaiting_approval` transition, usage and run status
+commit atomically to the PostgreSQL proposal inbox. The worker role may SELECT/INSERT this
+inbox, but remains SELECT-only on approval requests/grants and cannot insert outbox rows.
+
+The API polls durable pending inbox rows at startup and every second. It confirms the run
+succeeded, the same assigned specialist is still enabled, and the task still awaits review.
+The API derives requester and task IDs from persisted run/task rows, validates again, then
+creates a pending immutable approval with a 15-minute expiry and updates the inbox in one
+transaction. The unique run ID, row lock and approval dedupe key make redelivery idempotent.
+Invalid, stale, disabled-agent or changed-context records are rejected and waiting tasks
+move to the audited blocked state. A database/audit error rolls back both inbox acceptance
+and the approval. Owner approval/rejection UX remains T043; T042 does not create a grant or
+outbox action and does not perform external effects.

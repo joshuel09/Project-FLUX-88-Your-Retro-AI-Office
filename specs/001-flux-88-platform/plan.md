@@ -193,7 +193,9 @@ development, the latter ships with the product. `.claude/` is currently gitignor
 2. **Dashboard ↔ API**: session-authenticated; all input zod-validated server-side; SSE
    for live updates.
 3. **Worker ↔ API/DB**: worker runs with its own least-privilege DB role; it cannot mint
-   or consume approval grants or create outbox actions (T040).
+   or consume approval grants or create outbox actions (T040). It may stage bounded,
+   untrusted proposed-action records in a separate insert-only inbox; the API derives
+   requester identity from the persisted run before creating any approval (T042).
 4. **Agents ↔ world**: agents only reach the outside through connector adapters; connector
    writes require the exact grant-bound outbox action; reads are scope-checked against
    the agent registry. Capabilities are consumed only by the API before enqueueing.

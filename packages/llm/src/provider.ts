@@ -20,6 +20,8 @@ export interface CompletionRequest {
 
 export interface CompletionResult {
   content: string;
+  /** Untrusted action data; never an executable tool call or authorization. */
+  proposedAction?: unknown;
   usage: LLMUsage;
 }
 

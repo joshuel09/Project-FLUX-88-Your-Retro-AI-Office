@@ -30,7 +30,7 @@ const TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
   running: ['review', 'blocked', 'awaiting_approval', 'failed', 'canceled'],
   blocked: ['ready', 'running', 'canceled'],
   review: ['completed', 'running', 'canceled'],
-  awaiting_approval: ['running', 'canceled'],
+  awaiting_approval: ['running', 'blocked', 'failed', 'canceled'],
   completed: [],
   failed: [],
   canceled: [],
@@ -91,3 +91,11 @@ export const OFFICE_AREAS = [
   'memory-vault',
 ] as const;
 export type OfficeArea = (typeof OFFICE_AREAS)[number];
+
+
+/** Closed critical-action catalog shared by persisted approval and proposal contracts. */
+export const CRITICAL_ACTION_CATEGORIES = [
+  'payment', 'external_communication', 'publish_content', 'github_write',
+  'protected_branch_change', 'deployment_or_infra', 'delete_resource',
+  'share_private_externally', 'agent_config_change', 'policy_change', 'integration_write_enable',
+] as const;
