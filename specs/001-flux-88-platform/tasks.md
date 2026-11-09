@@ -82,7 +82,7 @@
 
 - [x] T039 [US2] Policy engine: closed critical-action category list (FR-030), default-deny evaluation keyed to acting agent identity (not DOC's) in `apps/api/src/policy/engine.ts` (CHK001, CHK015)
 - [x] T040 [US2] Approval lifecycle: immutable requests (action, target, impact, risks, expiry), approve→mint single-use `ApprovalGrant` (capability type), reject, expire; consumption transactional with outbox record; includes the `agent_config_change` category consumed by PATCH `/agents/:id/config` (closes the T018 deferral) in `apps/api/src/policy/approvals.ts` (FR-032/033, CHK002–004)
-- [ ] T041 [P] [US2] Transactional outbox dispatcher in worker with idempotent delivery to (mock) executors in `apps/worker/src/outbox.ts`
+- [x] T041 [P] [US2] Transactional outbox dispatcher in worker with idempotent delivery to (mock) executors in `apps/worker/src/outbox.ts`
 - [ ] T042 [P] [US2] Proposed-action flow for agents: runner emits proposals instead of executing critical categories; task → `awaiting_approval` in `apps/worker/src/runner/proposals.ts` (FR-031)
 - [ ] T043 [US2] Approval inbox UI in Clock Tower: pending list with expiry countdown, full detail, approve/reject with re-auth prompt in `apps/web/app/(office)/clock-tower/approvals/`
 - [ ] T044 [US2] Revalidation before execution: target state re-checked at consumption; mismatch halts + escalates in `apps/worker/src/outbox.ts` (US2-AS4, CHK004–005)

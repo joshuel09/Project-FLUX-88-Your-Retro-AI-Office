@@ -11,6 +11,7 @@ import { MAX_PARALLEL_DEFAULT } from './constants.js';
 import type { WorkerDeps } from './deps.js';
 import { createQueueBundle } from './queues/index.js';
 import { reconcile } from './reconcile.js';
+import { startOutboxDispatcher } from './outbox.js';
 
 const config = loadConfig();
 const db = createDb(config.DATABASE_URL);
@@ -31,6 +32,9 @@ const concurrency = config.MAX_PARALLEL_AGENT_RUNS ?? MAX_PARALLEL_DEFAULT;
 
 const { resumed } = await reconcile(deps);
 bundle.startWorkers(deps, concurrency);
+const dispatcher = startOutboxDispatcher(db, () => {
+  console.error('[flux88-worker] outbox polling failed; retrying on next poll');
+});
 console.log(
   `[flux88-worker] booted (mock LLM: ${config.MOCK_LLM}, concurrency: ${concurrency}, reconciled: ${resumed})`,
 );
@@ -38,6 +42,6 @@ console.log(
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     console.log(`[flux88-worker] ${signal} received, shutting down`);
-    void bundle.close().finally(() => process.exit(0));
+    void Promise.all([dispatcher.close(), bundle.close()]).finally(() => process.exit(0));
   });
 }

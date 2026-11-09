@@ -25,7 +25,7 @@ Consumption, outbox insertion, domain audit, and any local configuration mutatio
 in one transaction. Unique indexes enforce one grant per request and one outbox record
 per grant. Database triggers protect immutable proposals/decisions/grants/outbox actions;
 the worker role cannot mint/consume grants or insert outbox actions. Queued actions use
-the mock connector until the dispatcher arrives in T041. Local agent configuration
+the transactional mock dispatcher (T041); no external adapter is invoked. Local agent configuration
 changes are applied at consumption and their outbox records marked dispatched, so a
 future worker must not apply them again. Outbox payloads carry requester, exact action,
 target, expiry, and request ID for future execution-time revalidation (T044).
@@ -46,4 +46,40 @@ Validation: policy unit tests plus lifecycle/concurrency/expiry/rollback/HTTP te
 apps/api/src/policy. API integration files run sequentially because auth fixtures reset
 shared tables; concurrent behavior is exercised inside individual tests. Use a separately
 migrated and seeded DATABASE_URL. Full worker tests must use isolated Redis, not dev queues.
-The inbox UI and agent proposal/dispatcher wiring remain T041–T044.
+The inbox UI, runner proposals and full execution-time target/permission revalidation remain T042–T044.
+
+
+## Mock outbox delivery (T041)
+
+The worker polls PostgreSQL immediately on startup and every second, processing at most
+25 ready records per batch. No Redis job is required to rediscover a pending delivery.
+Concurrent pollers use `FOR UPDATE SKIP LOCKED`. Each dispatch transaction runs as
+`flux88_worker` via `SET LOCAL ROLE`; the connection must be allowed to assume that
+migration-created role. Approval tables remain SELECT-only. This restriction applies to
+the outbox transaction, not the other existing task-worker connections.
+
+Only `mock` records with an exact immutable approved-request/consumed-grant binding,
+matching operation and idempotency key, and unexpired approval can execute. Invalid,
+expired, live-connector, or pending agent-configuration deliveries halt with an audit
+record. Already dispatched local configuration records are never selected or reapplied.
+Current external target-state and agent-permission revalidation remains T044; this
+mock-only slice must not be used as a live connector delivery gate.
+
+The mock executor writes a visibly simulated `outbox.mock_executed` audit receipt.
+That receipt, dispatched status and delivery audit commit atomically. An exception or
+crash before commit leaves no mock effect; retry/restart therefore cannot duplicate a
+committed mock action. This does not establish exactly-once network delivery. Real
+adapters will need provider idempotency/reconciliation as well as T044 revalidation.
+
+Executor failures roll back the attempt's database writes to a savepoint and persist a
+sanitized failure audit plus attempt count. Three attempts are allowed, with persisted
+1-second then 2-second backoff; the final failure is terminal. Infrastructure or final
+audit failures roll back the whole transaction and are retried on a later poll. Raw
+errors and action payloads are not logged. Shutdown stops scheduling and drains the
+current batch. No API to automatically reset terminal deliveries is added here.
+
+Acceptance coverage: `apps/worker/src/outbox.integration.test.ts` exercises concurrent
+polling, replay through a fresh connection, partial-effect rollback, durable retry limits,
+expired/live/configuration refusal, worker privilege restrictions, final-audit rollback,
+and poller startup/shutdown. Worker integration files run sequentially to avoid the
+existing orchestration suite's table-reset fixture racing against outbox fixtures.
