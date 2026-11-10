@@ -4,4 +4,5 @@
  */
 export { createDb, createDbWithClient, type Db } from './client.js';
 export * as schema from './schema/index.js';
+export { mockTargetStateHash } from './mock-target-state.js';
 export * from './repos/index.js';

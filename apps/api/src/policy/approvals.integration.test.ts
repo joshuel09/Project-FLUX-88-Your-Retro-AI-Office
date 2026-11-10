@@ -3,13 +3,13 @@ import { randomUUID } from 'node:crypto';
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { AGENT_CONFIG_BY_ID } from '@flux88/agents';
+import { AGENT_CONFIG_BY_ID, policyConfigSchema } from '@flux88/agents';
 import { loadConfig } from '@flux88/config';
-import { schema, type Db } from '@flux88/db';
+import { mockTargetStateHash, schema, type Db } from '@flux88/db';
 import { connectTestDb, TEST_DATABASE_URL, truncateMutableTables } from '@flux88/db/testing';
 import { createApp } from '../app.js';
 import {
-  approvalBinding, consumeApprovalGrant, createApprovalRequest, decideApproval, getApproval,
+  approvalBinding, consumeApprovalGrant, createApprovalRequest, decideApproval, getApproval, stateHash,
   listApprovals, loadApprovalGrant, prepareAgentConfigChange, reauthenticateOwner,
   type ApprovalGrant, type ApprovalRequest, type ApprovalResult, type OwnerAuthorization,
 } from './approvals.js';
@@ -63,6 +63,21 @@ afterAll(async () => {
 });
 
 describe('immutable approval lifecycle', () => {
+  it('captures and protects the mock target state at request creation', async () => {
+    const targetResource = `mock-target:${randomUUID()}`;
+    const config = { mockTargets: { [targetResource]: { version: 1, enabled: true } } };
+    const [connector] = await db.insert(schema.connectorAccounts).values({
+      provider: 'mock', config, healthStatus: 'mock',
+    }).returning();
+    try {
+      const row = await request({ targetResource });
+      expect(row.targetStateHash).toBe(mockTargetStateHash([{ config }], targetResource));
+      await expect(db.update(schema.approvalRequests).set({ targetStateHash: 'changed' }).where(eq(schema.approvalRequests.id, row.id))).rejects.toThrow(/immutable/i);
+    } finally {
+      await db.delete(schema.connectorAccounts).where(eq(schema.connectorAccounts.id, connector!.id));
+    }
+  });
+
   it('deduplicates identical concurrent requests and preserves exact metadata', async () => {
     const input = proposal();
     const rows = await Promise.all([1, 2, 3].map(() => createApprovalRequest(db, { kind: 'owner' }, input)));
@@ -171,16 +186,20 @@ describe('single-use capability consumption', () => {
 
   it('queues an agent action only when both its current grants and owner approval match', async () => {
     try {
-      await db.update(schema.agents).set({ config: {
+      const approvedPolicy = {
         ...marty, allowedTools: [...marty.allowedTools, 'communications.send'],
         dataScopes: [...marty.dataScopes, 'communications:write'],
-      } }).where(eq(schema.agents.id, 'marty'));
+      };
+      await db.update(schema.agents).set({ config: approvedPolicy }).where(eq(schema.agents.id, 'marty'));
       const row = value(await createApprovalRequest(db, { kind: 'agent', agentId: 'marty' }, proposal()));
       const grant = await approve(row);
       const consumed = value(await consumeApprovalGrant(db, grant, approvalBinding(row)));
       const [delivery] = await db.select().from(schema.outbox).where(eq(schema.outbox.id, consumed.outboxId));
       expect(delivery?.status).toBe('pending');
-      expect(delivery?.payload).toMatchObject({ requester: { kind: 'agent', agentId: 'marty' } });
+      expect(delivery?.payload).toMatchObject({
+        requester: { kind: 'agent', agentId: 'marty' },
+        requesterPolicyHash: stateHash({ enabled: true, policy: policyConfigSchema.parse(approvedPolicy) }),
+      });
     } finally {
       await db.update(schema.agents).set({ config: marty }).where(eq(schema.agents.id, 'marty'));
     }

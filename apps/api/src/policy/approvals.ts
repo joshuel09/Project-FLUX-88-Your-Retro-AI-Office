@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import { agentConfigSchema, policyConfigSchema } from '@flux88/agents';
 import { AGENT_IDS, type AgentId } from '@flux88/core';
-import { schema, type Db } from '@flux88/db';
+import { mockTargetStateHash, schema, type Db } from '@flux88/db';
 import { detectSecretShaped } from '@flux88/memory';
 
 import { DUMMY_HASH_PROMISE, verifyPassword } from '../auth/passwords.js';
@@ -111,9 +111,11 @@ export async function createApprovalRequest(db: Db | Tx, rawActor: ApprovalActor
     const [existing] = await tx.select().from(requests).where(eq(requests.dedupeKey, key));
     if (existing) return { ok: true, value: existing };
     if (expiry.getTime() - Date.now() < MIN_TTL_MS) return denied(tx, 'invalid_input');
+    const targetAccounts = await tx.select({ config: schema.connectorAccounts.config }).from(schema.connectorAccounts);
+    const targetStateHash = mockTargetStateHash(targetAccounts, input.targetResource);
     const [request] = await tx.insert(requests).values({
       requestingActorType: actor.kind, requestingAgentId: actor.kind === 'agent' ? actor.agentId : null,
-      actionType: input.actionType, actionPayload: input.actionPayload, targetResource: input.targetResource,
+      actionType: input.actionType, actionPayload: input.actionPayload, targetResource: input.targetResource, targetStateHash,
       expectedImpact: input.expectedImpact, risks: input.risks, expiresAt: expiry,
       taskId: input.taskId ?? null, batchId: input.batchId ?? null, dedupeKey: key,
     }).returning();
@@ -273,6 +275,12 @@ export async function consumeApprovalGrant(db: Db, grant: ApprovalGrant, expecte
       const decision = evaluatePolicy(id, { operation: request.actionType }, agent ? { agentId: id, enabled: agent.enabled, policy: agent.config } : null);
       if (decision.allowed || decision.code !== 'approval_required') return denied(tx, 'permission_denied', request.id);
     }
+    let requesterPolicyHash: string | null = null;
+    if (request.requestingActorType === 'agent') {
+      const [requester] = await tx.select().from(agents).where(eq(agents.id, request.requestingAgentId! as AgentId));
+      if (!requester?.enabled) return denied(tx, 'permission_denied', request.id);
+      requesterPolicyHash = stateHash({ enabled: requester.enabled, policy: policyConfigSchema.parse(requester.config) });
+    }
     let updatedAgent: typeof agents.$inferSelect | null = null;
     if (request.actionType === 'agent_config_change') {
       const target = z.enum(AGENT_IDS).safeParse(request.targetResource.replace(/^agent:/, ''));
@@ -300,7 +308,8 @@ export async function consumeApprovalGrant(db: Db, grant: ApprovalGrant, expecte
     await tx.update(grants).set({ consumedAt: new Date(Date.now()), consumedByRunId: runId ?? null }).where(eq(grants.id, grant.id));
     const [delivery] = await tx.insert(outbox).values({
       connector: 'mock', operation: request.actionType, grantId: grant.id,
-      payload: { approvalRequestId: request.id, ...approvalBinding(request), expiresAt: request.expiresAt.toISOString() },
+      payload: { approvalRequestId: request.id, ...approvalBinding(request), expiresAt: request.expiresAt.toISOString(),
+        requesterPolicyHash, targetStateHash: request.targetStateHash },
       idempotencyKey: `approval:${request.id}`, status: updatedAgent ? 'dispatched' : 'pending',
     }).returning();
     if (!delivery) throw new Error('outbox insert returned no row');
