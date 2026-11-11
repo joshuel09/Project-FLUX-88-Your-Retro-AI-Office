@@ -59,17 +59,18 @@ migration-created role. Approval tables remain SELECT-only. This restriction app
 the outbox transaction, not the other existing task-worker connections.
 
 Only `mock` records with an exact immutable approved-request/consumed-grant binding,
-matching operation and idempotency key, and unexpired approval can execute. Invalid,
-expired, live-connector, or pending agent-configuration deliveries halt with an audit
-record. Already dispatched local configuration records are never selected or reapplied.
-Current external target-state and agent-permission revalidation remains T044; this
+matching operation and idempotency key, an unexpired approval, an unchanged mock target
+snapshot, and unchanged requesting-agent policy can execute. Invalid, expired,
+live-connector, or pending agent-configuration deliveries halt with an audit record.
+Already dispatched local configuration records are never selected or reapplied. This
 mock-only slice must not be used as a live connector delivery gate.
 
 The mock executor writes a visibly simulated `outbox.mock_executed` audit receipt.
 That receipt, dispatched status and delivery audit commit atomically. An exception or
 crash before commit leaves no mock effect; retry/restart therefore cannot duplicate a
 committed mock action. This does not establish exactly-once network delivery. Real
-adapters will need provider idempotency/reconciliation as well as T044 revalidation.
+adapters will need provider idempotency/reconciliation and provider-specific target-state
+revalidation before any live delivery is enabled.
 
 Executor failures roll back the attempt's database writes to a savepoint and persist a
 sanitized failure audit plus attempt count. Three attempts are allowed, with persisted
@@ -83,3 +84,21 @@ polling, replay through a fresh connection, partial-effect rollback, durable ret
 expired/live/configuration refusal, worker privilege restrictions, final-audit rollback,
 and poller startup/shutdown. Worker integration files run sequentially to avoid the
 existing orchestration suite's table-reset fixture racing against outbox fixtures.
+
+## Mock target and permission revalidation (T044)
+
+At approval-request creation, the API looks for exactly one matching
+`connector_accounts.config.mockTargets[targetResource]` value across connector accounts
+and stores its canonical SHA-256 as immutable `approval_requests.target_state_hash`.
+Missing or ambiguous target state stores no hash and is not executable. Immediately
+before the mock receipt, the worker re-reads that state and compares its hash with the
+request snapshot, checks the complete immutable request/outbox binding, expiry, and
+consumed grant, and compares the requester agent's current enabled flag and
+`policyConfigSchema` fields with the permission hash stored in the immutable outbox row.
+Presentation fields such as personality do not affect the policy hash.
+
+Any missing, changed, expired, or mismatched state sets the outbox row to
+`halted_revalidation`, writes an `outbox.halted_revalidation` audit event, and adds one
+deduplicated dashboard notification. No mock effect runs. This covers mutable mock target
+state only; current external GitHub/Discord/Trello resource state cannot be queried until
+provider adapters exist, and live connectors remain refused.

@@ -167,6 +167,8 @@ export const approvalRequests = pgTable('approval_requests', {
   actionType: approvalActionEnum('action_type').notNull(),
   actionPayload: jsonb('action_payload').notNull(),
   targetResource: text('target_resource').notNull(),
+  /** Hash of the mock connector's target state captured when the request is created. */
+  targetStateHash: text('target_state_hash'),
   expectedImpact: text('expected_impact').notNull(),
   risks: text('risks').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),

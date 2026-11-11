@@ -1,8 +1,10 @@
 /** T041: durable, mock-only delivery. The worker never mints or consumes grants. */
+import { createHash } from 'node:crypto';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { schema, type Db } from '@flux88/db';
+import { policyConfigSchema } from '@flux88/agents';
+import { mockTargetStateHash, schema, type Db } from '@flux88/db';
 
-const { outbox, approvalRequests, approvalGrants, auditEvents } = schema;
+const { outbox, approvalRequests, approvalGrants, auditEvents, agents, notifications } = schema;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 type Delivery = typeof outbox.$inferSelect;
 export const OUTBOX_MAX_ATTEMPTS = 3;
@@ -53,19 +55,38 @@ export async function dispatchNextOutbox(db: Db, execute: MockExecutor = execute
     const [grant] = await tx.select().from(approvalGrants).where(eq(approvalGrants.id, delivery.grantId));
     const [request] = grant ? await tx.select().from(approvalRequests)
       .where(eq(approvalRequests.id, grant.approvalRequestId)) : [];
+    let requesterPolicyHash: string | null = null;
+    if (request?.requestingActorType === 'agent' && request.requestingAgentId) {
+      const [agent] = await tx.select().from(agents).where(eq(agents.id, request.requestingAgentId));
+      const policy = agent ? policyConfigSchema.safeParse(agent.config) : null;
+      if (agent && policy?.success) requesterPolicyHash = createHash('sha256').update(canonical({ enabled: agent.enabled, policy: policy.data })).digest('hex');
+    }
+    const targetAccounts = await tx.select({ config: schema.connectorAccounts.config }).from(schema.connectorAccounts);
+    const currentTargetStateHash = request ? mockTargetStateHash(targetAccounts, request.targetResource) : null;
     const expected = request ? {
       approvalRequestId: request.id, actionType: request.actionType, actionPayload: request.actionPayload,
       targetResource: request.targetResource, expiresAt: request.expiresAt.toISOString(),
       requester: request.requestingActorType === 'owner' ? { kind: 'owner' }
         : { kind: 'agent', agentId: request.requestingAgentId },
+      requesterPolicyHash, targetStateHash: request.targetStateHash,
     } : null;
     const valid = delivery.connector === 'mock' && delivery.operation !== 'agent_config_change' &&
       grant?.consumedAt && request?.status === 'approved' && request.expiresAt.getTime() > Date.now() &&
       delivery.operation === request.actionType && delivery.idempotencyKey === `approval:${request.id}` &&
+      request.targetStateHash !== null && currentTargetStateHash === request.targetStateHash &&
       canonical(delivery.payload) === canonical(expected);
     if (!valid) {
       await tx.update(outbox).set({ status: 'halted_revalidation', updatedAt: new Date() }).where(eq(outbox.id, delivery.id));
-      await record(tx, delivery, 'outbox.halted_revalidation', { code: 'invalid_or_expired_mock_delivery' });
+      const code = !request || !grant?.consumedAt || request.status !== 'approved' ? 'invalid_approval'
+        : request.expiresAt.getTime() <= Date.now() ? 'approval_expired'
+          : request.targetStateHash === null || currentTargetStateHash === null || currentTargetStateHash !== request.targetStateHash || canonical(delivery.payload) !== canonical(expected) ? 'target_or_permission_changed'
+            : 'unsupported_mock_delivery';
+      await record(tx, delivery, 'outbox.halted_revalidation', { code });
+      await tx.insert(notifications).values({
+        channel: 'dashboard', taskId: request?.taskId ?? null, approvalRequestId: request?.id ?? null,
+        body: 'An approved action was stopped because its approval, target, or requester permission state could not be verified at dispatch. Review the approval request.',
+        dedupeKey: `outbox.revalidation:${delivery.id}`,
+      });
       return 'halted_revalidation';
     }
     const attempts = delivery.attempts + 1;
