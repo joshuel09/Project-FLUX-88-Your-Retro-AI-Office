@@ -86,7 +86,7 @@
 - [ ] T042 [P] [US2] Proposed-action flow for agents: runner emits proposals instead of executing critical categories; task → `awaiting_approval` in `apps/worker/src/runner/proposals.ts` (FR-031)
 - [ ] T043 [US2] Approval inbox UI in Clock Tower: pending list with expiry countdown, full detail, approve/reject with re-auth prompt in `apps/web/app/(office)/clock-tower/approvals/`
 - [x] T044 [US2] Revalidation before execution: mock target snapshot and requester permissions are re-checked immediately before dispatch; mismatch halts, audits, and notifies the owner in `apps/worker/src/outbox.ts` (US2-AS4, CHK004–005)
-- [ ] T045 [US2] Integration test: scenario 6+7 (unapproved restricted action denied+audited; approved executes exactly once; reuse/expired refused; second identical request deduplicated) in `apps/api/src/policy/approvals.integration.test.ts`
+- [x] T045 [US2] Integration test: scenario 6+7 (unapproved restricted action denied+audited; approved executes exactly once; reuse/expired refused; second identical request deduplicated) in `apps/api/src/policy/approvals.integration.test.ts`
 
 ## Phase 7: US4 — Durable office (spec User Story 4) + hardening
 
