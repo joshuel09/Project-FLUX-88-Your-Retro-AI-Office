@@ -102,7 +102,7 @@
 
 ## Phase 8: Polish & release gate
 
-- [ ] T053 [P] Empty/zero-state designs for every dashboard surface in `apps/web/components/empty-states/` (CHK037)
+- [x] T053 [P] Empty/zero-state designs for every dashboard surface in `apps/web/components/empty-states/` (CHK037)
 - [ ] T054 [P] Contrast audit of retro tokens (4.5:1 text, 3:1 UI) + documented palette pairs in `apps/web/app/globals.css` (CHK034)
 - [ ] T055 Full e2e sweep: SC-001 fresh-clone timing doc, all quickstart scenarios green, axe on all areas in `e2e/tests/release-gate.spec.ts`
 - [ ] T056 Update README.md + specs/001-flux-88-platform/quickstart.md to match implemented commands; record Phase 1 demo script in `docs/demo-phase-1.md`

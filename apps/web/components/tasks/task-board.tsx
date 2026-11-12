@@ -14,6 +14,7 @@ import {
   type TaskSummary,
 } from '../../lib/types';
 import { SimulatedBadge } from '../simulated-badge';
+import { EmptyState } from '../empty-states/empty-state';
 import { TaskDrawer } from './task-drawer';
 
 const STATUS_ACCENT: Record<TaskStatus, string> = {
@@ -31,6 +32,7 @@ const STATUS_ACCENT: Record<TaskStatus, string> = {
 export function TaskBoard() {
   const [tasks, setTasks] = useState<TaskSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
@@ -42,6 +44,7 @@ export function TaskBoard() {
       const res = await api.get<{ items: TaskSummary[] }>('/api/v1/tasks');
       setTasks(res.items);
       setError(null);
+      setLoaded(true);
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : 'Failed to load tasks.');
     }
@@ -122,6 +125,10 @@ export function TaskBoard() {
         <p role="alert" className="border border-magenta-neon p-2 text-sm text-magenta-soft">
           {error}
         </p>
+      )}
+
+      {loaded && !error && topLevel.length === 0 && (
+        <EmptyState title="No tasks yet" description="Delegate a goal above to start work on the board." />
       )}
 
       <div className="flex gap-3 overflow-x-auto pb-2" role="list" aria-label="Task board columns">

@@ -23,7 +23,7 @@
 - [ ] CHK034 Are neon-palette contrast requirements measurable (which token pairs must meet 4.5:1 / 3:1)? [Measurability, Spec §FR-052]
 - [ ] CHK035 Are "simulated vs real" distinction requirements defined for BOTH visual and assistive-technology presentation? [Coverage, Spec §FR-053]
 - [ ] CHK036 Are responsive requirements bounded (minimum supported viewport, behavior of nine-area navigation on mobile)? [Gap, Spec §FR-050]
-- [ ] CHK037 Are empty/zero-state requirements defined for each dashboard surface (no tasks, no approvals, empty vault)? [Edge Case, Gap]
+- [x] CHK037 Do task, approval, agent, memory, timeline, activity, audit, integration, budget, subtask and artifact surfaces explain their empty states? [Edge Case]
 
 ## Mock-Mode Acceptance Scenarios 1–3, 6–10 (Spec §User Scenarios, quickstart.md)
 

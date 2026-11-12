@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { api } from '../../../../lib/api';
+import { EmptyState } from '../../../../components/empty-states/empty-state';
 
 interface AuditEvent {
   id: string;
@@ -69,7 +70,7 @@ export default function AuditPage() {
               Notifications ({data.notifications.length})
             </h2>
             {data.notifications.length === 0 ? (
-              <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/70">No stored notifications.</p>
+              <EmptyState title="No stored notifications" description="Notification records will appear here when created." />
             ) : (
               <ul className="flex flex-col gap-3">
                 {data.notifications.map((notification) => (
@@ -96,7 +97,7 @@ export default function AuditPage() {
               Audit events ({data.audit.length})
             </h2>
             {data.audit.length === 0 ? (
-              <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/70">No audit events.</p>
+              <EmptyState title="No audit events" description="Recorded actions will appear here." />
             ) : (
               <ol className="flex flex-col gap-2">
                 {data.audit.map((event) => (

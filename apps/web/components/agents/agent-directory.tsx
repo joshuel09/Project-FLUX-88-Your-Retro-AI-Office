@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { api } from '../../lib/api';
 import { DEPARTMENT_LABELS, type AgentSummary } from '../../lib/types';
+import { EmptyState } from '../empty-states/empty-state';
 import { StatusBadge } from '../simulated-badge';
 
 const DEPARTMENT_ORDER: AgentSummary['department'][] = [
@@ -60,13 +61,14 @@ export function AgentDirectory({ areaFilter }: { areaFilter?: string }) {
           </section>
         );
       })}
+      {visible.length === 0 && <EmptyState title="No agents found" description="No agents are assigned to this area yet." />}
     </div>
   );
 }
 
 function AgentGrid({ agents }: { agents: AgentSummary[] }) {
   if (agents.length === 0) {
-    return <p className="text-sm text-cyan-soft/70">No agents stationed here.</p>;
+    return <EmptyState title="No agents found" description="No agents are assigned to this area yet." />;
   }
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="agent-grid">

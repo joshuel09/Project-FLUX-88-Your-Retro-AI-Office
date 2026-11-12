@@ -5,6 +5,7 @@
  * as they happen across the office.
  */
 import { useEffect, useRef, useState } from 'react';
+import { EmptyState } from '../../../../components/empty-states/empty-state';
 
 interface FeedEntry {
   at: string;
@@ -81,9 +82,7 @@ export default function ActivityPage() {
       </p>
 
       {entries.length === 0 ? (
-        <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/70">
-          Waiting for activity — delegate a goal from the Task Board to see the office at work.
-        </p>
+        <EmptyState title="Waiting for activity" description="Delegate a goal from the Task Board to see the office at work." />
       ) : (
         <ol className="flex flex-col gap-2" aria-label="Live events, newest first">
           {entries.map((entry, index) => (

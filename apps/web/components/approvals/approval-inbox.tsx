@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { api, ApiRequestError } from '../../lib/api';
+import { EmptyState } from '../empty-states/empty-state';
 
 type Approval = {
   id: string;
@@ -104,7 +105,7 @@ export function ApprovalInbox() {
       {notice && <p role="status" className="border border-cyan-neon p-2 text-sm text-cyan-neon">{notice}</p>}
       {error && <p role="alert" className="border border-magenta-neon p-2 text-sm text-magenta-soft">{error}</p>}
       {loading ? <p role="status" className="text-sm text-amber-warm">Loading approval requests…</p> : items.length === 0 ? (
-        <p className="border border-dashed border-navy-700 p-5 text-sm text-cyan-soft">No pending approval requests.</p>
+        <EmptyState title="No pending approvals" description="New requests that need your review will appear here." />
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((item) => (

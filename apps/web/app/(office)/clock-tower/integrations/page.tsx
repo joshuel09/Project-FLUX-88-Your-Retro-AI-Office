@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { api } from '../../../../lib/api';
+import { EmptyState } from '../../../../components/empty-states/empty-state';
 
 interface Integration {
   id: string;
@@ -40,7 +41,7 @@ export default function IntegrationsPage() {
       {error && <p role="alert" className="border border-magenta-neon p-3 text-sm text-magenta-soft">Could not load integrations.</p>}
       {!error && !integrations && <p role="status" className="text-sm text-amber-warm">Loading integrations…</p>}
       {integrations && integrations.length === 0 && (
-        <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/70">No connector accounts are configured.</p>
+        <EmptyState title="No integrations configured" description="Connector accounts will appear here when configured." />
       )}
       {integrations && integrations.length > 0 && (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">

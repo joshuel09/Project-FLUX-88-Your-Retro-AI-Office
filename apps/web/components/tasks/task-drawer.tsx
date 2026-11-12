@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api, ApiRequestError } from '../../lib/api';
 import type { AgentSummary, TaskDeep, TimelineEntry } from '../../lib/types';
 import { SimulatedBadge } from '../simulated-badge';
+import { EmptyState } from '../empty-states/empty-state';
 import { Timeline } from '../timeline/timeline';
 
 export function TaskDrawer({
@@ -235,6 +236,7 @@ export function TaskDrawer({
               </ul>
             </section>
           )}
+          {deep.subtasks.length === 0 && <EmptyState title="No subtasks" description="This task has no delegated subtasks." />}
 
           {deep.artifacts.length > 0 && (
             <section aria-labelledby="artifacts-title" className="border border-navy-700 p-3">
@@ -255,6 +257,7 @@ export function TaskDrawer({
               </ul>
             </section>
           )}
+          {deep.artifacts.length === 0 && <EmptyState title="No artifacts" description="Completed work artifacts will appear here." />}
 
           <section aria-labelledby="timeline-title" className="border border-navy-700 p-3">
             <h3 id="timeline-title" className="mb-2 text-sm uppercase tracking-widest text-amber-warm">

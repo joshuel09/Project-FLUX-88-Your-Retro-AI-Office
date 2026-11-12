@@ -1,4 +1,5 @@
 import type { TimelineEntry } from '../../lib/types';
+import { EmptyState } from '../empty-states/empty-state';
 
 const KIND_STYLES: Record<TimelineEntry['kind'], string> = {
   handoff: 'border-magenta-neon text-magenta-soft',
@@ -9,7 +10,7 @@ const KIND_STYLES: Record<TimelineEntry['kind'], string> = {
 /** Delegation timeline (T029): handoffs, runs and audited transitions in order. */
 export function Timeline({ entries }: { entries: TimelineEntry[] }) {
   if (entries.length === 0) {
-    return <p className="text-sm text-cyan-soft/70">No activity yet.</p>;
+    return <EmptyState title="No activity yet" description="Task updates and handoffs will appear here." />;
   }
   return (
     <ol className="flex flex-col gap-2" aria-label="Delegation timeline">
