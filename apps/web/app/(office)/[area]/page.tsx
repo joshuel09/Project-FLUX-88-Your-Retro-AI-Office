@@ -50,6 +50,12 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
           >
             Agent Directory →
           </Link>
+          <Link
+            href="/clock-tower/approvals"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Approval Inbox →
+          </Link>
         </nav>
       )}
 
@@ -60,9 +66,11 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
         <AgentDirectory areaFilter={meta.slug} />
       </section>
 
-      <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/80">
-        Approvals and memory search arrive with the next slices (US3, US2).
-      </p>
+      {meta.slug !== 'clock-tower' && (
+        <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/80">
+          This area is a themed shell for the Phase 1 mock office.
+        </p>
+      )}
     </section>
   );
 }
