@@ -29,7 +29,11 @@ import { createQueueBundle, type QueueBundle } from '../queues/index.js';
 import { runAgentTask } from '../runner/index.js';
 import { orchestrateTask } from './doc.js';
 
-const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6388';
+const REDIS_URL = (() => {
+  const url = new URL(process.env.REDIS_URL ?? 'redis://localhost:6388');
+  url.pathname = '/15'; // Keep integration jobs away from local development workers.
+  return url.toString();
+})();
 
 let db: Db;
 let endClient: () => Promise<void>;
@@ -193,7 +197,7 @@ describe('US1 — delegated task execution (scenario 1, mock mode)', () => {
   });
 
   it(
-    'enforces per-run budgets: over-budget runs fail, retry, then escalate to the owner (FR-018)',
+    'halts over-budget runs without retrying and escalates to the owner',
     async () => {
       const goal = await createTask(db, {
         title: 'Implement the overdrive module [mock:over-budget]',
@@ -209,25 +213,17 @@ describe('US1 — delegated task execution (scenario 1, mock mode)', () => {
       );
 
       const parent = await getTask(db, goal.id);
-      expect(parent?.blockedReason).toContain('subtask failed');
+      expect(parent?.blockedReason).toMatch(/budget/i);
 
       const [subtask] = await listSubtasks(db, goal.id);
-      expect(subtask?.status).toBe('failed');
+      expect(subtask?.status).toBe('blocked');
       expect(subtask?.blockedReason).toBe('budget_exceeded');
       if (!subtask) return;
 
-      // One run per attempt (initial + retries), every one failed on budget.
       const runs = await listRuns(db, subtask.id);
-      expect(runs.length).toBe(subtask.retryCount + 1);
-      expect(runs.every((r) => r.status === 'failed' && r.error === 'budget_exceeded')).toBe(true);
-
-      // Owner resumes the escalated parent: it closes cleanly as failed
-      // instead of hanging in running (resume path, T030).
-      await transitionTask(db, goal.id, 'ready', { actorType: 'owner', actorId: 'session' });
-      await orchestrateTask(deps, goal.id);
-      const closed = await getTask(db, goal.id);
-      expect(closed?.status).toBe('failed');
-      expect(closed?.blockedReason).toBe('subtask failures');
+      expect(subtask.retryCount).toBe(0);
+      expect(runs).toHaveLength(1);
+      expect(runs[0]).toMatchObject({ status: 'halted_budget', error: 'budget_exceeded' });
     },
     30_000,
   );

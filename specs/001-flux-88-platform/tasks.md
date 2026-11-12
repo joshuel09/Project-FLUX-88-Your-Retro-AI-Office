@@ -96,7 +96,7 @@
 - [x] T047 [US4] Integration test: scenario 2 restart persistence (tasks/approvals/memory/audit identical after full restart; interrupted runs resume or cleanly fail; no duplicates) in `e2e/tests/restart.spec.ts`
 - [x] T048 [P] [US4] Untrusted-content handling: ingress tagging + delimiter rendering in prompt assembly in `packages/llm/src/prompt-assembly.ts` (FR-025, CHK009–010)
 - [x] T049 [US4] Adversarial fixture pack + test: hostile instructions in mock crawled content cannot change permissions, bypass approval, or elevate memory trust in `e2e/adversarial/injection.spec.ts` (SC-008, CHK011–012)
-- [ ] T050 [P] [US4] Budget monitoring UI (per-agent consumption vs limits, mock numbers) in `apps/web/app/(office)/front-desk/budgets/page.tsx`; over-budget halt test in `apps/worker/src/runner/budgets.test.ts`
+- [x] T050 [P] [US4] Budget monitoring UI (per-agent consumption vs limits, mock numbers) in `apps/web/app/(office)/front-desk/budgets/page.tsx`; over-budget halt test in `apps/worker/src/runner/budgets.integration.test.ts`
 - [ ] T051 [P] [US4] Notifications center + audit history UI in `apps/web/app/(office)/clock-tower/audit/page.tsx` with dedupe-key display
 - [ ] T052 [P] [US4] Minimal mock connector adapters implementing the shared adapter interface (read-only, health reporting) in `packages/connectors/src/mock/` + integrations health page in `apps/web/app/(office)/clock-tower/integrations/page.tsx` (FR-040)
 

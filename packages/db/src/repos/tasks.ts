@@ -207,7 +207,7 @@ export async function finishRun(
   db: Db,
   id: string,
   patch: {
-    status: 'succeeded' | 'failed';
+    status: 'succeeded' | 'failed' | 'halted_budget';
     inputTokens?: number;
     outputTokens?: number;
     costCents?: number;
