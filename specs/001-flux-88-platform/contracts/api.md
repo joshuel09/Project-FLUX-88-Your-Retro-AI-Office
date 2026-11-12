@@ -88,9 +88,9 @@ consume grants directly.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | /audit | Append-only event log (filter by actor/target/action) |
+| GET | /audit?actorId=&targetType=&action=&limit= | Append-only event log (limit 1–100; filter by actor/target/action) |
 | GET | /budgets · PATCH /budgets/:agentId | View/set per-agent budgets |
-| GET | /notifications | Owner notification history (dedupe keys visible) |
+| GET | /notifications?limit= | Owner notification history (limit 1–100; dedupe keys visible) |
 
 ## Non-negotiable contract properties
 
