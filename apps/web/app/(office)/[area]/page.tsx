@@ -59,6 +59,17 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
         </nav>
       )}
 
+      {meta.slug === 'front-desk' && (
+        <nav aria-label="Front Desk sections">
+          <Link
+            href="/front-desk/budgets"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Agent Budgets →
+          </Link>
+        </nav>
+      )}
+
       <section aria-labelledby="area-agents">
         <h2 id="area-agents" className="mb-2 text-sm uppercase tracking-widest text-amber-warm">
           Stationed agents

@@ -26,7 +26,10 @@ import type { WorkerDeps } from '../deps.js';
 import { stageProposedAction } from './proposals.js';
 
 class RunFailure extends Error {
-  constructor(public readonly code: 'budget_exceeded' | 'runtime_exceeded' | 'provider_error' | 'proposal_rejected') {
+  constructor(
+    public readonly code: 'budget_exceeded' | 'runtime_exceeded' | 'provider_error' | 'proposal_rejected',
+    public readonly usage?: CompletionResult['usage'],
+  ) {
     super(code);
   }
 }
@@ -51,7 +54,7 @@ async function completeWithinBudget(
       timeout,
     ]);
     if (result.usage.inputTokens + result.usage.outputTokens > budgets.maxTokensPerRun) {
-      throw new RunFailure('budget_exceeded');
+      throw new RunFailure('budget_exceeded', result.usage);
     }
     return result;
   } finally {
@@ -233,6 +236,39 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
   } catch (error) {
     const durationMs = Date.now() - started;
     const code = error instanceof RunFailure ? error.code : 'provider_error';
+    if (error instanceof RunFailure && error.code === 'budget_exceeded') {
+      const usage = error.usage;
+      await finishRun(deps.db, run.id, {
+        status: 'halted_budget',
+        error: code,
+        ...(usage ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, costCents: usage.costCents } : {}),
+        durationMs,
+      });
+      if (usage) {
+        await addTaskUsage(deps.db, taskId, {
+          tokens: usage.inputTokens + usage.outputTokens,
+          costCents: usage.costCents,
+          execMs: durationMs,
+        });
+      }
+      await writeAudit(deps.db, {
+        actorType: 'system',
+        actorId: 'worker',
+        action: 'run.budget_halted',
+        targetType: 'task',
+        targetId: taskId,
+        payload: { agentId, attempt, ...(usage ? { tokens: usage.inputTokens + usage.outputTokens, costCents: usage.costCents } : {}) },
+      });
+      await transitionTask(deps.db, taskId, 'blocked', {
+        actorType: 'system',
+        actorId: 'worker',
+        reason: code,
+      });
+      await deps.publish({ channel: 'task', data: { taskId, status: 'blocked', agentId, reason: code } });
+      await escalateToParent(deps, task, `subtask budget exceeded: ${task.title}`);
+      return;
+    }
+
     await finishRun(deps.db, run.id, { status: 'failed', error: code, durationMs });
     await writeAudit(deps.db, {
       actorType: 'agent',
