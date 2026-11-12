@@ -1,7 +1,6 @@
 import { execFile, spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import path from 'node:path';
 
 import type { CompletionRequest, CompletionResult, LLMProvider } from '../../packages/llm/src/provider.js';
 
@@ -94,6 +93,31 @@ export class FailureInjectionHarness {
     return port;
   }
 
+  async migrateDatabase() {
+    const env = { ...this.composeEnv, DATABASE_URL: this.databaseUrl };
+    await run('pnpm', ['--filter', '@flux88/db', 'db:migrate'], repositoryRoot, env);
+  }
+
+  async pingPostgres() {
+    return (await this.compose(['exec', '--no-TTY', 'postgres', 'psql', '-U', 'flux88', '-d', 'flux88_failure', '-t', '-A', '-c', 'SELECT 1'])).stdout.trim();
+  }
+
+  async restartPostgres() {
+    await this.compose(['restart', 'postgres']);
+    const port = await this.publishedPort('postgres', 5432);
+    const password = this.composeEnv.FAILURE_TEST_PG_PASSWORD;
+    if (!password) throw new Error('failure harness database password is missing');
+    this.databaseUrl = `postgres://flux88:${password}@127.0.0.1:${port}/flux88_failure`;
+    const deadline = Date.now() + 10_000;
+    while (Date.now() < deadline) {
+      try {
+        if (await this.pingPostgres() === '1') return;
+      } catch { /* Wait for only this test-owned service to become ready. */ }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    throw new Error('isolated PostgreSQL did not recover');
+  }
+
   async pingRedis() {
     return (await this.compose(['exec', '--no-TTY', 'redis', 'redis-cli', 'ping'])).stdout.trim();
   }
@@ -102,6 +126,8 @@ export class FailureInjectionHarness {
 
   async restartRedis() {
     await this.compose(['start', 'redis']);
+    const port = await this.publishedPort('redis', 6379);
+    this.redisUrl = `redis://127.0.0.1:${port}`;
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
       try {
@@ -112,12 +138,13 @@ export class FailureInjectionHarness {
     throw new Error('isolated Redis did not recover');
   }
 
-  spawnWorker(command = process.execPath, args = ['--import', 'tsx', path.join(repositoryRoot, 'apps/worker/src/index.ts')], extraEnv: NodeJS.ProcessEnv = {}): OwnedWorker {
+  spawnWorker(command = 'pnpm', args = ['--filter', '@flux88/worker', 'exec', 'tsx', 'src/index.ts'], extraEnv: NodeJS.ProcessEnv = {}): OwnedWorker {
     if (this.closed) throw new Error('failure harness is closed');
     const child = spawn(command, args, {
       cwd: repositoryRoot,
       env: { ...process.env, ...extraEnv, DATABASE_URL: this.databaseUrl, REDIS_URL: this.redisUrl, MOCK_LLM: 'true' },
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: process.platform !== 'win32',
     });
     let captured = '';
     const waiters = new Set<{ marker: string; resolve: () => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
@@ -156,7 +183,8 @@ export class FailureInjectionHarness {
   async killWorker(worker: OwnedWorker, signal: NodeJS.Signals = 'SIGKILL') {
     if (!this.workers.has(worker)) throw new Error('worker is not owned by this failure harness');
     if (worker.process.exitCode === null && worker.process.signalCode === null) {
-      worker.process.kill(signal);
+      if (process.platform === 'win32') worker.process.kill(signal);
+      else process.kill(-worker.process.pid!, signal);
       await worker.exit;
     }
   }

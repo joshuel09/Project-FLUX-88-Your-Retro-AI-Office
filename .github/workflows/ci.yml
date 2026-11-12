@@ -73,3 +73,9 @@ jobs:
 
       - name: Integration tests
         run: pnpm -r --workspace-concurrency=1 --if-present test:integration
+
+      - name: Install Playwright Chromium
+        run: pnpm --dir e2e exec playwright install --with-deps chromium
+
+      - name: Failure and restart harness tests
+        run: pnpm --dir e2e exec playwright test tests/failure-harness.spec.ts tests/restart.spec.ts --workers=1 --reporter=line

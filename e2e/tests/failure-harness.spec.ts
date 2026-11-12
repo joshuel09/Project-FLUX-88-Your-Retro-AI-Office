@@ -28,3 +28,17 @@ test('failure harness scopes provider, worker, and Redis interruption to its own
   }
   expect(await harness.remainingContainers()).toEqual([]);
 });
+
+test('failure harness restarts only its own PostgreSQL service', async () => {
+  test.setTimeout(120_000);
+  const harness = await createFailureHarness();
+  try {
+    await harness.migrateDatabase();
+    expect(await harness.pingPostgres()).toBe('1');
+    await harness.restartPostgres();
+    expect(await harness.pingPostgres()).toBe('1');
+  } finally {
+    await harness.close();
+  }
+  expect(await harness.remainingContainers()).toEqual([]);
+});
