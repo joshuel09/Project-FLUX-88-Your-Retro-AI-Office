@@ -56,6 +56,12 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
           >
             Approval Inbox →
           </Link>
+          <Link
+            href="/clock-tower/audit"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Notifications &amp; Audit →
+          </Link>
         </nav>
       )}
 

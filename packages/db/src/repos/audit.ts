@@ -25,11 +25,12 @@ export async function writeAudit(db: Db, event: AuditWrite) {
 
 export async function listAudit(
   db: Db,
-  opts: { limit?: number; actorId?: string; targetType?: string } = {},
+  opts: { limit?: number; actorId?: string; targetType?: string; action?: string } = {},
 ) {
   const conditions = [];
   if (opts.actorId) conditions.push(eq(auditEvents.actorId, opts.actorId));
   if (opts.targetType) conditions.push(eq(auditEvents.targetType, opts.targetType));
+  if (opts.action) conditions.push(eq(auditEvents.action, opts.action));
   return db
     .select()
     .from(auditEvents)
