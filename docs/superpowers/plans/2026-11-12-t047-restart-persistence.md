@@ -57,4 +57,4 @@
 - [x] Verify they expose fixture and worker setup failures, then fix those setup defects.
 - [x] Implement the minimal fixture setup and assertions; no application behavior change was needed.
 - [x] Run focused restart/failure tests, e2e typecheck, root typecheck/build/unit tests, and wire the scoped Playwright harness tests into CI.
-- [ ] Confirm the exact-head CI suite before merging.
+- [x] Confirm the exact-head CI suite before merging.
