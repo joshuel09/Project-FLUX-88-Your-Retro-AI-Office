@@ -1,6 +1,6 @@
 /** T040 lifecycle, capability, atomicity, and owner HTTP acceptance tests. Isolated DB only. */
 import { randomUUID } from 'node:crypto';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { AGENT_CONFIG_BY_ID, policyConfigSchema } from '@flux88/agents';
@@ -8,6 +8,7 @@ import { loadConfig } from '@flux88/config';
 import { mockTargetStateHash, schema, type Db } from '@flux88/db';
 import { connectTestDb, TEST_DATABASE_URL, truncateMutableTables } from '@flux88/db/testing';
 import { createApp } from '../app.js';
+import { evaluateAndAuditPolicy } from './engine.js';
 import {
   approvalBinding, consumeApprovalGrant, createApprovalRequest, decideApproval, getApproval, stateHash,
   listApprovals, loadApprovalGrant, prepareAgentConfigChange, reauthenticateOwner,
@@ -148,6 +149,68 @@ describe('immutable approval lifecycle', () => {
 });
 
 describe('single-use capability consumption', () => {
+  it('denies and audits an unapproved restricted action without creating an outbox delivery', async () => {
+    try {
+      await db.update(schema.agents).set({ config: {
+        ...AGENT_CONFIG_BY_ID.get('doc')!, allowedTools: ['payments.execute'], dataScopes: ['payments:write'],
+        escalation: { criteria: [], approvalRequired: [] },
+      } }).where(eq(schema.agents.id, 'doc'));
+      const before = await db.select().from(schema.outbox);
+      expect(await evaluateAndAuditPolicy(db, 'doc', { operation: 'payment' })).toMatchObject({
+        allowed: false, actorId: 'doc', actionType: 'payment', code: 'approval_required',
+      });
+      const [event] = await db.select().from(schema.auditEvents).where(and(
+        eq(schema.auditEvents.actorId, 'doc'), eq(schema.auditEvents.action, 'policy.denied'),
+        eq(schema.auditEvents.targetType, 'policy'), eq(schema.auditEvents.targetId, 'payment'),
+      ));
+      expect(event).toMatchObject({ payload: { actionType: 'payment', code: 'approval_required' } });
+      expect(await db.select().from(schema.outbox)).toHaveLength(before.length);
+    } finally {
+      const doc = AGENT_CONFIG_BY_ID.get('doc')!;
+      await db.update(schema.agents).set({ config: doc, enabled: true }).where(eq(schema.agents.id, 'doc'));
+    }
+  });
+
+  it('deduplicates an approved proposal and consumes its grant into exactly one outbox record', async () => {
+    const targetResource = `t045:${randomUUID()}`;
+    const targetState = { mockTargets: { [targetResource]: { revision: 1 } } };
+    const [connector] = await db.insert(schema.connectorAccounts).values({
+      provider: 'mock', config: targetState, healthStatus: 'mock',
+    }).returning();
+    try {
+      const input = proposal({ targetResource });
+      const row = value(await createApprovalRequest(db, { kind: 'owner' }, input));
+      const duplicate = value(await createApprovalRequest(db, { kind: 'owner' }, input));
+      expect(duplicate.id).toBe(row.id);
+
+      const grant = await approve(row);
+      const consumed = value(await consumeApprovalGrant(db, grant, approvalBinding(row)));
+      expect(await consumeApprovalGrant(db, grant, approvalBinding(row))).toMatchObject({ ok: false, code: 'already_consumed' });
+      expect(await db.select().from(schema.auditEvents).where(and(
+        eq(schema.auditEvents.targetId, row.id), eq(schema.auditEvents.action, 'approval.denied'),
+      ))).toMatchObject([{ payload: { code: 'already_consumed' } }]);
+      expect(await db.select().from(schema.outbox).where(eq(schema.outbox.grantId, grant.id))).toHaveLength(1);
+      const [delivery] = await db.select().from(schema.outbox).where(eq(schema.outbox.id, consumed.outboxId));
+      expect(delivery).toMatchObject({ status: 'pending', attempts: 0 });
+      expect(await db.select().from(schema.auditEvents).where(and(
+        eq(schema.auditEvents.targetId, row.id), eq(schema.auditEvents.action, 'approval.consumed'),
+      ))).toHaveLength(1);
+    } finally {
+      await db.delete(schema.connectorAccounts).where(eq(schema.connectorAccounts.id, connector!.id));
+    }
+  });
+
+  it('refuses and audits an expired approved grant without enqueueing an outbox action', async () => {
+    const row = await request(); const grant = await approve(row);
+    vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(Date.now() + 3600_000);
+    expect(await consumeApprovalGrant(db, grant, approvalBinding(row))).toMatchObject({ ok: false, code: 'expired' });
+    expect((await grantRow(grant.id)).consumedAt).toBeNull();
+    expect(await db.select().from(schema.outbox).where(eq(schema.outbox.grantId, grant.id))).toHaveLength(0);
+    expect(await db.select().from(schema.auditEvents).where(and(
+      eq(schema.auditEvents.targetId, row.id), eq(schema.auditEvents.action, 'approval.denied'),
+    ))).toMatchObject([{ payload: { code: 'expired' } }]);
+  });
+
   it('binds actor, action, target, and payload; forged JSON grants are refused', async () => {
     const row = await request(); const grant = await approve(row); const binding = approvalBinding(row);
     expect(await consumeApprovalGrant(db, { id: grant.id, approvalRequestId: row.id } as ApprovalGrant, binding)).toMatchObject({ ok: false, code: 'invalid_grant' });
