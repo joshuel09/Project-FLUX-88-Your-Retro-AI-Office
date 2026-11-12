@@ -15,6 +15,7 @@ import { approvalRoutes } from './routes/approvals.js';
 import { auditRoutes } from './routes/audit.js';
 import { agentsRoutes } from './routes/agents.js';
 import { eventsRoutes } from './routes/events.js';
+import { integrationRoutes } from './routes/integrations.js';
 import { memoryRoutes } from './routes/memory.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { tasksRoutes } from './routes/tasks.js';
@@ -57,6 +58,7 @@ export function createApp(deps: AppDeps = {}) {
   protectedApi.route('/notifications', notificationRoutes(db));
   protectedApi.route('/memory', memoryRoutes(db));
   protectedApi.route('/events', eventsRoutes());
+  protectedApi.route('/integrations', integrationRoutes(db));
   app.route('/api/v1', protectedApi);
 
   app.get('/api/v1', (c) =>

@@ -62,6 +62,12 @@ export default async function OfficeAreaPage({ params }: { params: Promise<{ are
           >
             Notifications &amp; Audit →
           </Link>
+          <Link
+            href="/clock-tower/integrations"
+            className="border border-amber-deep px-3 py-2 text-sm text-amber-warm hover:border-amber-warm"
+          >
+            Integrations Health →
+          </Link>
         </nav>
       )}
 
