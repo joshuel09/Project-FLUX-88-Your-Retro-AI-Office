@@ -23,8 +23,8 @@
 
 - [ ] CHK009 Is "untrusted" propagation specified end-to-end (ingress → memory → prompt assembly → outputs)? [Completeness, Spec §FR-025]
 - [ ] CHK010 Is the prompt-assembly delimiter/rendering requirement for untrusted content stated as a testable rule? [Measurability, Plan §Security Boundary 5]
-- [ ] CHK011 Are requirements defined for untrusted content that CLAIMS to be owner authorization (scenario 8 wording)? [Coverage, Spec §US6-AS3]
-- [ ] CHK012 Is there a defined adversarial test corpus requirement for SC-008, including who maintains it? [Gap, Spec §SC-008]
+- [x] CHK011 Are requirements defined for untrusted content that CLAIMS to be owner authorization (scenario 8 wording)? [Coverage: `e2e/adversarial/injection.spec.ts`, Spec §US6-AS3]
+- [x] CHK012 Is there a defined adversarial test corpus requirement for SC-008, including who maintains it? [Gap closed: `e2e/adversarial/README.md`, Spec §SC-008]
 - [ ] CHK013 Are trust-elevation requirements specified — how proposed/untrusted memory becomes verified, and who may do it? [Clarity, Spec §FR-021]
 
 ## Agent Least Privilege (Constitution II; agents.md)

@@ -78,4 +78,4 @@ jobs:
         run: pnpm --dir e2e exec playwright install --with-deps chromium
 
       - name: Failure and restart harness tests
-        run: pnpm --dir e2e exec playwright test tests/failure-harness.spec.ts tests/restart.spec.ts --workers=1 --reporter=line
+        run: pnpm --dir e2e exec playwright test tests/failure-harness.spec.ts tests/restart.spec.ts adversarial/injection.spec.ts --workers=1 --reporter=line

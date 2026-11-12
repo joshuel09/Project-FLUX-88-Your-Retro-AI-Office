@@ -5,7 +5,8 @@ import { defineConfig, devices } from '@playwright/test';
  * Assumes the stack is running: `pnpm db:up && pnpm db:migrate && pnpm db:seed && pnpm dev`.
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: './',
+  testMatch: '**/*.spec.ts',
   timeout: 30_000,
   retries: 0,
   use: {
