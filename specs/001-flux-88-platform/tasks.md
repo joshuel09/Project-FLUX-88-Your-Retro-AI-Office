@@ -92,7 +92,7 @@
 
 **Goal**: restart/failure safety proven; budgets visible; injection resistance tested. **Independent test**: quickstart scenarios 2, 5, 6 (SC-003, SC-008, SC-009).
 
-- [ ] T046 [US4] Failure-injection harness: kill MockProvider/worker/Redis mid-run at defined lifecycle points in `e2e/failure/harness.ts` (CHK040)
+- [x] T046 [US4] Failure-injection harness: kill MockProvider/worker/Redis mid-run at defined lifecycle points in `e2e/failure/harness.ts` (CHK040)
 - [ ] T047 [US4] Integration test: scenario 2 restart persistence (tasks/approvals/memory/audit identical after full restart; interrupted runs resume or cleanly fail; no duplicates) in `e2e/failure/restart.spec.ts`
 - [ ] T048 [P] [US4] Untrusted-content handling: ingress tagging + delimiter rendering in prompt assembly in `packages/llm/src/prompt-assembly.ts` (FR-025, CHK009–010)
 - [ ] T049 [US4] Adversarial fixture pack + test: hostile instructions in mock crawled content cannot change permissions, bypass approval, or elevate memory trust in `e2e/adversarial/injection.spec.ts` (SC-008, CHK011–012)
