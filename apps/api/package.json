@@ -14,6 +14,7 @@
   "dependencies": {
     "@flux88/agents": "workspace:*",
     "@flux88/config": "workspace:*",
+    "@flux88/connectors": "workspace:*",
     "@flux88/core": "workspace:*",
     "@flux88/db": "workspace:*",
     "@flux88/memory": "workspace:*",
