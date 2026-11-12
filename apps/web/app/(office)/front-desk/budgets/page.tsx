@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { api } from '../../../../lib/api';
 import type { AgentSummary } from '../../../../lib/types';
+import { EmptyState } from '../../../../components/empty-states/empty-state';
 
 function samplePercent(agentId: string) {
   return 15 + [...agentId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 70;
@@ -30,7 +31,8 @@ export default function BudgetsPage() {
 
       {error && <p role="alert" className="border border-magenta-neon p-3 text-sm text-magenta-soft">Could not load agent budgets.</p>}
       {!error && !agents && <p role="status" className="text-sm text-amber-warm">Loading budgets…</p>}
-      {agents && (
+      {agents && agents.length === 0 && <EmptyState title="No agent budgets" description="Add agents to see their configured limits and simulated usage." />}
+      {agents && agents.length > 0 && (
         <div className="overflow-x-auto border border-navy-700">
           <table className="w-full min-w-[38rem] text-left text-sm">
             <caption className="sr-only">Simulated budget usage for all agents</caption>

@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 import { api, ApiRequestError } from '../../lib/api';
+import { EmptyState } from '../empty-states/empty-state';
 import {
   MEMORY_CATEGORIES,
   type MemoryEntryDetail,
@@ -215,7 +216,7 @@ export function MemoryVault() {
             Results ({hits.length}, {mode})
           </h2>
           {hits.length === 0 ? (
-            <p className="border border-dashed border-navy-700 p-4 text-sm text-cyan-soft/70">Nothing found.</p>
+            <EmptyState title="No memories found" description="Try a different search or filter." />
           ) : (
             <ul className="flex flex-col gap-2">
               {hits.map((hit) => (
