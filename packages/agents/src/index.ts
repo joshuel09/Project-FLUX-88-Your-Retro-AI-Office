@@ -12,3 +12,5 @@ export {
   type PolicyConfig,
 } from './schema.js';
 export { AGENT_CONFIGS, AGENT_CONFIG_BY_ID } from './configs.js';
+
+export { proposalSchema, preparedActionSchema, approvalRequestTtlMs, type ApprovalProposal, type Json } from './proposals.js';

@@ -63,6 +63,12 @@ One LLM-or-mock execution of an agent against a task.
 - `input_tokens`, `output_tokens`, `cost_cents`, `duration_ms` (FR-016)
 - `idempotency_key` (dedupe, FR-017), `error?`, `simulated`
 
+### agent_action_proposals
+- PostgreSQL worker-to-API inbox keyed one-to-one by the actual `agent_runs.id`
+- `proposal` contains only a bounded critical action, exact target, impact, risks and payload
+- Worker role may insert/read; API role validates the persisted run/task/agent context and changes pending → accepted (approval request ID) or rejected (safe reason code)
+- Proposal/run identity and content cannot be rewritten; no grants or external action are stored here
+
 ### approval_requests  *(immutable after creation)*
 - `id`, `requesting_actor_type` (owner|agent), `requesting_agent_id` (required for agents, null for owner requests), `action_type` (one of FR-030 categories), `action_payload`
   (exact proposed action), `target_resource`, `expected_impact`, `risks`, `expires_at`

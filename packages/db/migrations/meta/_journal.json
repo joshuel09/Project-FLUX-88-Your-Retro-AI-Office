@@ -29,6 +29,13 @@
       "when": 1794319942377,
       "tag": "0003_heavy_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794452506503,
+      "tag": "0004_ambiguous_sugar_man",
+      "breakpoints": true
     }
   ]
 }

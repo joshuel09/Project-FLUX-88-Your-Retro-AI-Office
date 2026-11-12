@@ -111,6 +111,9 @@ importers:
       '@flux88/llm':
         specifier: workspace:*
         version: link:../../packages/llm
+      '@flux88/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       bullmq:
         specifier: ^5.34.0
         version: 5.81.5

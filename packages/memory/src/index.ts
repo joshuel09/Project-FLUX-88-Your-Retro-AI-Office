@@ -7,6 +7,7 @@ export {
   MEMORY_CATEGORIES,
   checkWritePermission,
   detectSecretShaped,
+  containsSecretMaterial,
   readableCategories,
   type MemoryCategory,
   type VerificationStatus,

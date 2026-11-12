@@ -18,6 +18,7 @@ export function connectTestDb() {
 export async function truncateMutableTables(db: ReturnType<typeof connectTestDb>['db']) {
   await db.execute(sql`
     TRUNCATE TABLE
+      agent_action_proposals,
       outbox,
       approval_grants,
       approval_requests,
