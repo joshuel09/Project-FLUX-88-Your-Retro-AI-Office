@@ -26,7 +26,7 @@ const STATUS_ACCENT: Record<TaskStatus, string> = {
   awaiting_approval: 'border-amber-deep text-amber-warm',
   completed: 'border-navy-700 text-cyan-soft/70',
   failed: 'border-magenta-neon text-magenta-soft',
-  canceled: 'border-navy-700 text-cyan-soft/50',
+  canceled: 'border-navy-700 text-cyan-soft/60',
 };
 
 export function TaskBoard() {

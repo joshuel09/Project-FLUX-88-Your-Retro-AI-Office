@@ -1,11 +1,26 @@
 @import 'tailwindcss';
 
-/* FLUX-88 retro theme tokens (T002). Contrast pairs audited in T054. */
+/*
+ * FLUX-88 retro theme tokens (T002). WCAG relative-luminance audit (T054):
+ * text requires 4.5:1; meaningful UI boundaries require 3:1. Ratios use
+ * opaque colors and are listed navy-950 / navy-900 / navy-800 respectively.
+ * Text pairs: cyan-neon 14.71/14.09/12.70, cyan-soft 15.32/14.68/13.23,
+ * magenta-neon 6.71/6.43/5.80, magenta-soft 10.66/10.21/9.20,
+ * amber-warm 13.89/13.30/11.99. These are the foreground text tokens used
+ * on these dark surface tokens. navy-700 is a border token, not a text surface.
+ * UI boundary pairs: cyan-neon 12.70 minimum, magenta-neon 5.80 minimum,
+ * amber-deep 7.86 minimum, navy-700 (#586b99) 3.21 minimum. Minima are across
+ * navy-950 / navy-900 / navy-800. The border color is used for component
+ * boundaries; accent colors mark status, focus, and action boundaries.
+ * Cyan-soft opacity text variants /80, /70, and /60 have minima 8.85, 7.07,
+ * and 5.54 against navy-800; /50 was below 4.5 and is not used.
+ * Disabled-control opacity and decorative glow/scanline effects are excluded.
+ */
 @theme {
   --color-navy-950: #070a1c;
   --color-navy-900: #0b1026;
   --color-navy-800: #141a3a;
-  --color-navy-700: #1f2752;
+  --color-navy-700: #586b99;
   --color-cyan-neon: #5df3ff;
   --color-cyan-soft: #9ff0ff;
   --color-magenta-neon: #ff3df0;

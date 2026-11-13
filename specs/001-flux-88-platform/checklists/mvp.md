@@ -20,7 +20,7 @@
 
 - [ ] CHK032 Are WCAG 2.1 AA requirements decomposed into checkable sub-requirements (contrast, keyboard, labels, focus) per dashboard view? [Completeness, Spec §SC-010]
 - [ ] CHK033 Is reduced-motion behavior specified per effect (CRT, scanline, glow, transitions) — disabled vs. reduced? [Clarity, Spec §FR-052]
-- [ ] CHK034 Are neon-palette contrast requirements measurable (which token pairs must meet 4.5:1 / 3:1)? [Measurability, Spec §FR-052]
+- [x] CHK034 Are neon-palette contrast requirements measurable (which token pairs must meet 4.5:1 / 3:1)? [Measurability, Spec §FR-052] — Text and UI token pairs, thresholds, measured ratios, and excluded effects are documented in `apps/web/app/globals.css`.
 - [ ] CHK035 Are "simulated vs real" distinction requirements defined for BOTH visual and assistive-technology presentation? [Coverage, Spec §FR-053]
 - [ ] CHK036 Are responsive requirements bounded (minimum supported viewport, behavior of nine-area navigation on mobile)? [Gap, Spec §FR-050]
 - [x] CHK037 Do task, approval, agent, memory, timeline, activity, audit, integration, budget, subtask and artifact surfaces explain their empty states? [Edge Case]
