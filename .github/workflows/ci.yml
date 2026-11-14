@@ -79,3 +79,20 @@ jobs:
 
       - name: Failure and restart harness tests
         run: pnpm --dir e2e exec playwright test tests/failure-harness.spec.ts tests/restart.spec.ts adversarial/injection.spec.ts --workers=1 --reporter=line
+
+      - name: Start office stack for dashboard tests
+        run: pnpm dev > "$RUNNER_TEMP/flux88-dev.log" 2>&1 &
+
+      - name: Wait for dashboard API
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail http://localhost:3000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/flux88-dev.log"
+          exit 1
+
+      - name: Dashboard and axe release gate
+        run: pnpm --dir e2e exec playwright test tests/us2-approval-inbox.spec.ts tests/us3-memory-vault.spec.ts tests/us5-dashboard.spec.ts tests/release-gate.spec.ts --workers=1 --reporter=line

@@ -238,6 +238,26 @@ export function TaskDrawer({
           )}
           {deep.subtasks.length === 0 && <EmptyState title="No subtasks" description="This task has no delegated subtasks." />}
 
+          {deep.dependencies.length > 0 && (
+            <section aria-labelledby="dependencies-title" className="border border-navy-700 p-3">
+              <h3 id="dependencies-title" className="text-sm uppercase tracking-widest text-amber-warm">
+                Dependency graph
+              </h3>
+              <ol aria-label="Task dependency graph" className="mt-2 flex flex-col gap-1 text-sm text-cyan-soft">
+                {deep.dependencies.map(({ taskId, dependsOnTaskId }) => {
+                  const tasks = [deep.task, ...deep.subtasks];
+                  const prerequisite = tasks.find((item) => item.id === dependsOnTaskId)?.title ?? dependsOnTaskId;
+                  const dependent = tasks.find((item) => item.id === taskId)?.title ?? taskId;
+                  return (
+                    <li key={`${taskId}-${dependsOnTaskId}`}>
+                      <span>{prerequisite}</span> <span aria-hidden="true">→</span> <span>{dependent}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          )}
+
           {deep.artifacts.length > 0 && (
             <section aria-labelledby="artifacts-title" className="border border-navy-700 p-3">
               <h3 id="artifacts-title" className="text-sm uppercase tracking-widest text-amber-warm">
