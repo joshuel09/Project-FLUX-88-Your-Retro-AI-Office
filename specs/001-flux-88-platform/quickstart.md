@@ -24,8 +24,8 @@ set -a
 set +a
 pnpm install --frozen-lockfile
 pnpm db:up
-pnpm --filter @flux-88/db db:migrate
-pnpm --filter @flux-88/db db:seed
+pnpm --filter @flux88/db db:migrate
+pnpm --filter @flux88/db db:seed
 pnpm dev
 ```
 
@@ -58,8 +58,8 @@ Run from the repository root unless `--dir e2e` is shown.
 | Command | Purpose |
 |---|---|
 | `pnpm db:up` / `pnpm db:down` | Start / stop Postgres and Redis Compose services |
-| `pnpm --filter @flux-88/db db:migrate` | Apply database migrations |
-| `pnpm --filter @flux-88/db db:seed` | Seed agent profiles, budgets, mock connectors, and sample tasks |
+| `pnpm --filter @flux88/db db:migrate` | Apply database migrations |
+| `pnpm --filter @flux88/db db:seed` | Seed agent profiles, budgets, mock connectors, and sample tasks |
 | `pnpm dev` / `pnpm build` | Run / build workspace apps |
 | `pnpm typecheck` / `pnpm test` | Run workspace type checks / unit tests |
 | `pnpm -r --workspace-concurrency=1 --if-present test:integration` | Run workspace integration tests against `DATABASE_URL`; use a disposable database |

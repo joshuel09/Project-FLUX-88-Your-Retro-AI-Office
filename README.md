@@ -21,8 +21,8 @@ set -a
 set +a
 pnpm install --frozen-lockfile
 pnpm db:up
-pnpm --filter @flux-88/db db:migrate
-pnpm --filter @flux-88/db db:seed
+pnpm --filter @flux88/db db:migrate
+pnpm --filter @flux88/db db:seed
 pnpm dev
 ```
 
