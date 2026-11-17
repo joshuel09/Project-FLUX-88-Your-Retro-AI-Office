@@ -1,9 +1,9 @@
 # API Contract Overview: FLUX-88 (Hono HTTP API)
 
 **Date**: 2026-11-06 · Shape-level contract; exact zod schemas land in `apps/api` during
-Phase 1. All routes require an authenticated owner session unless noted; all mutations
-require a CSRF token; all inputs are server-side validated; every mutation writes an audit
-event.
+Phase 1. Routes require an authenticated owner session unless the agent bearer routes below
+are noted; all mutations are origin-checked; all inputs are server-side validated; every
+mutation writes an audit event.
 
 ## Conventions
 
@@ -27,6 +27,12 @@ event.
 | GET | /agents | All 18 agents with status + config summary |
 | GET | /agents/:id | Full config |
 | PATCH | /agents/:id/config | Edit configuration (validated against registry schema; **policy-affecting fields require approval flow**) |
+| POST | /agents/:id/service-credential | Rotate one-time bearer credential (owner session; previous credential revoked) |
+| DELETE | /agents/:id/service-credential/:credentialId | Revoke an agent bearer credential |
+
+Agent bearer routes use a separate `/agent` prefix: `GET /agent/me`, `GET /agent/tasks/:id`,
+and `POST /agent/tasks/:id/transition`. They authenticate from the bearer credential and
+are limited to the credential's own identity and assigned tasks.
 
 ## Tasks & orchestration
 

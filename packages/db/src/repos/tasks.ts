@@ -64,6 +64,7 @@ export async function transitionTask(
   id: string,
   to: TaskStatus,
   ctx: TransitionContext,
+  expectedAssigneeAgentId?: AgentId,
 ): Promise<{ ok: true; task: TaskRow } | TransitionRejection | { ok: false; code: 'not_found' | 'conflict'; message: string }> {
   const current = await getTask(db, id);
   if (!current) return { ok: false, code: 'not_found', message: 'task not found' };
@@ -75,7 +76,11 @@ export async function transitionTask(
     const [row] = await tx
       .update(tasks)
       .set({ status: plan.patch.status, blockedReason: plan.patch.blockedReason, updatedAt: new Date() })
-      .where(and(eq(tasks.id, id), eq(tasks.status, plan.from)))
+      .where(and(
+        eq(tasks.id, id),
+        eq(tasks.status, plan.from),
+        expectedAssigneeAgentId ? eq(tasks.assigneeAgentId, expectedAssigneeAgentId) : undefined,
+      ))
       .returning();
     if (!row) {
       return { ok: false as const, code: 'conflict' as const, message: 'task changed concurrently' };

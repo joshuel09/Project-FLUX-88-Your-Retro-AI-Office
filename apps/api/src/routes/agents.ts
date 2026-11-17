@@ -6,6 +6,7 @@ import { AGENT_IDS } from '@flux88/core';
 import type { Db } from '@flux88/db';
 import { getAgent, listAgents, updateAgentPresentation, writeAudit } from '@flux88/db';
 
+import { revokeAgentCredential, rotateAgentCredential } from '../auth/agent-credentials.js';
 import { agentConfigPatchSchema, consumeApprovalGrant, getApproval, loadApprovalGrant, prepareAgentConfigChange } from '../policy/approvals.js';
 import { emitEvent } from '../events.js';
 
@@ -34,6 +35,29 @@ export function agentsRoutes(db: Db) {
     if (!id) return c.json({ error: { code: 'not_found', message: 'Unknown agent' } }, 404);
     const agent = await getAgent(db, id);
     return agent ? c.json(agent) : c.json({ error: { code: 'not_found', message: 'Unknown agent' } }, 404);
+  });
+
+  app.post('/:id/service-credential', async (c) => {
+    const id = parseAgentId(c.req.param('id'));
+    if (!id) return c.json({ error: { code: 'not_found', message: 'Unknown agent' } }, 404);
+    const body = z.object({}).strict().safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: { code: 'invalid_input', message: 'Credential issuance accepts no options' } }, 400);
+    const agent = await getAgent(db, id);
+    if (!agent) return c.json({ error: { code: 'not_found', message: 'Unknown agent' } }, 404);
+    if (!agent.enabled) return c.json({ error: { code: 'agent_disabled', message: 'Enable the agent before issuing a credential' } }, 409);
+    const credential = await rotateAgentCredential(db, id);
+    emitEvent({ channel: 'audit', data: { kind: 'agent.credential_issued', agentId: id } });
+    return c.json({ id: credential.id, token: credential.token, expiresAt: credential.expiresAt.toISOString() }, 201);
+  });
+
+  app.delete('/:id/service-credential/:credentialId', async (c) => {
+    const id = parseAgentId(c.req.param('id'));
+    const credentialId = z.string().uuid().safeParse(c.req.param('credentialId'));
+    if (!id || !credentialId.success) return c.json({ error: { code: 'not_found', message: 'Unknown credential' } }, 404);
+    const revoked = await revokeAgentCredential(db, id, credentialId.data);
+    if (!revoked) return c.json({ error: { code: 'not_found', message: 'Unknown credential' } }, 404);
+    emitEvent({ channel: 'audit', data: { kind: 'agent.credential_revoked', agentId: id } });
+    return c.json({ ok: true });
   });
 
   app.patch('/:id/config', async (c) => {

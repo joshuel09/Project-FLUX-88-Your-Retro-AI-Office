@@ -12,6 +12,7 @@ import { auditMutations } from './middleware/audit.js';
 import { requireOwner } from './middleware/auth.js';
 import { strictOrigin } from './middleware/origin.js';
 import { approvalRoutes } from './routes/approvals.js';
+import { agentApiRoutes } from './routes/agent-api.js';
 import { auditRoutes } from './routes/audit.js';
 import { agentsRoutes } from './routes/agents.js';
 import { eventsRoutes } from './routes/events.js';
@@ -48,6 +49,7 @@ export function createApp(deps: AppDeps = {}) {
   );
 
   app.route('/api/v1/auth', authRoutes(db));
+  app.route('/api/v1/agent', agentApiRoutes(db));
 
   const protectedApi = new Hono();
   protectedApi.use(requireOwner(db));
