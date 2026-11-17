@@ -46,7 +46,11 @@ try {
 
   const password = decodeURIComponent(workerUrl.password);
   const [passwordCommand] = await admin<{ setPassword: string }[]>`
-    SELECT format('ALTER ROLE %I LOGIN INHERIT PASSWORD %L', 'flux88_worker_login', ${password}) AS "setPassword"
+    SELECT format(
+      'ALTER ROLE %I LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD %L',
+      'flux88_worker_login',
+      ${password}::text
+    ) AS "setPassword"
   `;
   if (!passwordCommand?.setPassword) throw new Error('Could not prepare the worker role password command.');
   await admin.unsafe(passwordCommand.setPassword);

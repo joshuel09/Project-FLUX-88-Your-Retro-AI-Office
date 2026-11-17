@@ -5,6 +5,11 @@ import type { Db } from '@flux88/db';
 export async function assertWorkerDatabaseRole(db: Db): Promise<void> {
   const [identity] = await db.execute(sql`
     SELECT role.rolsuper AS is_superuser,
+      role.rolcreatedb AS can_create_database,
+      role.rolcreaterole AS can_create_roles,
+      role.rolreplication AS can_replicate,
+      role.rolbypassrls AS can_bypass_rls,
+      role.rolinherit AS can_inherit,
       pg_has_role(session_user, 'flux88_worker', 'MEMBER') AS has_worker_role,
       NOT (
         has_table_privilege(session_user, 'agents', 'INSERT') OR
@@ -36,11 +41,20 @@ export async function assertWorkerDatabaseRole(db: Db): Promise<void> {
 
   const row = identity as unknown as {
     is_superuser: boolean;
+    can_create_database: boolean;
+    can_create_roles: boolean;
+    can_replicate: boolean;
+    can_bypass_rls: boolean;
+    can_inherit: boolean;
     has_worker_role: boolean;
     has_no_protected_write_access: boolean;
     has_no_other_roles: boolean;
   } | undefined;
-  if (!row || row.is_superuser || !row.has_worker_role || !row.has_no_protected_write_access || !row.has_no_other_roles) {
+  if (
+    !row || row.is_superuser || row.can_create_database || row.can_create_roles || row.can_replicate ||
+    row.can_bypass_rls || !row.can_inherit || !row.has_worker_role || !row.has_no_protected_write_access ||
+    !row.has_no_other_roles
+  ) {
     throw new Error('Worker database credentials must be a non-superuser member of flux88_worker.');
   }
 }
