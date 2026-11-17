@@ -18,8 +18,9 @@ BEFORE TRUNCATE ON "audit_events"
 FOR EACH STATEMENT EXECUTE FUNCTION flux88_audit_append_only();
 --> statement-breakpoint
 -- Least-privilege worker role (plan Security Boundary 3, CHK026):
--- NOLOGIN (no credential in migrations); the worker connects with the app
--- connection and runs SET ROLE flux88_worker. It can read/write runtime
+-- NOLOGIN (no credential in migrations); provision a separate worker login as
+-- a member of this role. Worker connections must never use the admin URL.
+-- It can read/write runtime
 -- tables but CANNOT touch approval_requests/approval_grants decisions
 -- (SELECT only) and cannot modify agents, owner or sessions.
 DO $$

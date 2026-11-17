@@ -25,6 +25,7 @@ set +a
 pnpm install --frozen-lockfile
 pnpm db:up
 pnpm --filter @flux88/db db:migrate
+pnpm --filter @flux88/db db:provision-worker-role
 pnpm --filter @flux88/db db:seed
 pnpm dev
 ```
@@ -59,6 +60,7 @@ Run from the repository root unless `--dir e2e` is shown.
 |---|---|
 | `pnpm db:up` / `pnpm db:down` | Start / stop Postgres and Redis Compose services |
 | `pnpm --filter @flux88/db db:migrate` | Apply database migrations |
+| `pnpm --filter @flux88/db db:provision-worker-role` | Create the restricted worker login from `WORKER_DATABASE_URL` using `DATABASE_URL` as the admin connection; run after migrations |
 | `pnpm --filter @flux88/db db:seed` | Seed agent profiles, budgets, mock connectors, and sample tasks |
 | `pnpm dev` / `pnpm build` | Run / build workspace apps |
 | `pnpm typecheck` / `pnpm test` | Run workspace type checks / unit tests |

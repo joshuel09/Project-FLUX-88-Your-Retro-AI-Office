@@ -131,7 +131,7 @@ One PR per slice (per the owner's batching preference): Phase 2 foundational →
 
 ## Phase 9: Convergence
 
-- [ ] T058 [CRITICAL] Enforce the `flux88_worker` least-privilege role for every worker database operation and prevent worker elevation; the worker starts from the general `DATABASE_URL`, and `SET LOCAL ROLE` appears only in outbox dispatch and proposal staging while the task runner uses the unrestricted connection (Constitution II, plan Security Boundary 3, T006; gap: contradicts).
+- [x] T058 [CRITICAL] Enforce the `flux88_worker` least-privilege role for every worker database operation and prevent worker elevation; the worker starts from the general `DATABASE_URL`, and `SET LOCAL ROLE` appears only in outbox dispatch and proposal staging while the task runner uses the unrestricted connection (Constitution II, plan Security Boundary 3, T006; gap: contradicts).
 - [ ] T059 [HIGH] Add policy-scoped memory search and write to agent task execution, including source and trust metadata in prompt assembly; agent profiles advertise memory tools, but the runner currently sends only the task title and description to the provider (FR-020/FR-025, US3 acceptance 1 and 4; gap: partial).
 - [ ] T060 [HIGH] Implement an audited deletion path for stale or incorrect memory entries with defined history-retention behavior; current memory supports correction and revocation, but has no deletion operation (FR-022; gap: partial).
 - [ ] T061 [HIGH] Add least-privilege service credentials and authenticated agent API access; current API routes use owner cookie-session authentication, with no agent service credential flow (FR-072; gap: missing).

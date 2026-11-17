@@ -16,7 +16,8 @@
     "test:integration": "vitest run --passWithNoTests src/**/*.integration.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
-    "db:seed": "tsx src/seed.ts"
+    "db:seed": "tsx src/seed.ts",
+    "db:provision-worker-role": "tsx src/provision-worker-role.ts"
   },
   "dependencies": {
     "@flux88/agents": "workspace:*",

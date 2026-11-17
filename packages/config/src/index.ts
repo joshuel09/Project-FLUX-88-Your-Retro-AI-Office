@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://flux88:flux88_local_dev@localhost:5488/flux88'),
+  WORKER_DATABASE_URL: z.string().url().optional(),
   REDIS_URL: z.string().url().default('redis://localhost:6388'),
   API_PORT: z.coerce.number().int().positive().default(3001),
   WEB_URL: z.string().url().default('http://localhost:3000'),
