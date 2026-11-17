@@ -121,7 +121,9 @@ export async function writeMemory(
     });
     return { ok: false, code: 'forbidden', message: decision.reason ?? 'Write not permitted.' };
   }
-  const status: VerificationStatus = decision.forcedStatus ?? input.verificationStatus ?? 'proposed';
+  const status: VerificationStatus = decision.forcedStatus === 'proposed' && input.verificationStatus === 'untrusted'
+    ? 'untrusted'
+    : decision.forcedStatus ?? input.verificationStatus ?? 'proposed';
 
   const hash = dedupeHashOf(input.category, input.title, input.body);
   const scope = input.scope ?? (input.category === 'private' ? 'private' : input.category === 'project' ? 'project' : 'shared');

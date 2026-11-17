@@ -42,6 +42,7 @@ export async function createTask(
     priority?: number | undefined;
     simulated?: boolean | undefined;
     assigneeAgentId?: AgentId | undefined;
+    origin?: TaskRow['origin'] | undefined;
     parentTaskId?: string | undefined;
     delegationDepth?: number | undefined;
     retryLimit?: number | undefined;
