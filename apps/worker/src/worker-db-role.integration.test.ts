@@ -25,7 +25,7 @@ beforeAll(async () => {
 
   await admin.db.execute(sql.raw(`DROP ROLE IF EXISTS ${login}`));
   const [command] = await admin.db.execute(sql`
-    SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', ${login}, ${password}) AS statement
+    SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', ${login}::text, ${password}::text) AS statement
   `);
   await admin.db.execute(sql.raw((command as unknown as { statement: string }).statement));
   await admin.db.execute(sql.raw(`GRANT flux88_worker TO ${login}`));
