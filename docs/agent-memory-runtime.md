@@ -13,6 +13,19 @@ cannot set a verified status. They remain proposed unless explicitly downgraded 
 untrusted; writes from GitHub/Trello tasks, or runs that retrieved untrusted memory, are
 forced to untrusted regardless of the provider's label.
 
+## External content boundary
+
+The current worker sends only the task title/description and retrieved memory to the
+provider. It does not execute web research, repository crawling, or general-purpose tools,
+so those external outputs cannot currently enter a local run through a tool adapter.
+The worker does treat tasks labeled `github` or `trello` as external, but connector
+ingress for those task origins is not implemented here. Retrieved entries already marked
+untrusted are the other external-content path currently handled. A provider-authored
+`sourceAttribution` is descriptive metadata, not provenance evidence; it cannot mark a
+write untrusted or verified by itself. When external tools or connector ingress are
+implemented, they must mark content untrusted at ingress and carry that provenance to any
+memory proposal derived from it before the worker can safely persist it.
+
 Task records do not have a project identifier yet. Agent runs therefore do not read or
 write project-scoped entries. Project entries are refused at runtime until a trusted
 project identity is carried by the task; shared and author-private entries remain scoped.
