@@ -17,7 +17,7 @@ const worker = createDbWithClient(workerUrl.toString());
 
 beforeAll(async () => {
   const [role] = await admin.db.execute(sql`
-    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'flux88_worker') AS exists
+    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'flux88_worker') AS "exists"
   `);
   if (!(role as unknown as { exists: boolean }).exists) {
     throw new Error('Run migrations before worker database role integration tests.');

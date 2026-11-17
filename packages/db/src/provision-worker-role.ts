@@ -22,7 +22,7 @@ if (
 const admin = postgres(config.DATABASE_URL, { max: 1, onnotice: () => {} });
 try {
   const [roleStatus] = await admin<{ exists: boolean }[]>`
-    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'flux88_worker') AS exists
+    SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'flux88_worker') AS "exists"
   `;
   if (!roleStatus?.exists) throw new Error('Run database migrations before provisioning the worker database role.');
 
