@@ -15,11 +15,13 @@ export {
 } from './write-rules.js';
 export {
   correctMemory,
+  deleteMemory,
   dedupeHashOf,
   getMemory,
   revokeMemory,
   writeMemory,
   type MemoryActionResult,
+  type MemoryDeleteResult,
   type MemoryActor,
   type MemoryEntryRow,
   type MemoryWriteInput,

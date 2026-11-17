@@ -3,7 +3,7 @@
 /**
  * Memory Vault UI (T037): keyword/semantic search with attribution and
  * verification labels, entry detail with versions and conflicts, owner
- * knowledge entry and revocation (FR-020..FR-025).
+ * knowledge entry, revocation, and permanent deletion (FR-020..FR-025).
  */
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
@@ -83,6 +83,18 @@ export function MemoryVault() {
       setNotice('Entry revoked — hidden from search, history preserved.');
     } catch (err) {
       setNotice(err instanceof ApiRequestError ? err.message : 'Revoke failed.');
+    }
+  }
+
+  async function deleteEntry(id: string) {
+    if (!window.confirm('Permanently delete this memory and all version history? The audit log will retain the actor, entry ID, and fixed deletion reason, but no memory content. This cannot be undone.')) return;
+    try {
+      await api.delete(`/api/v1/memory/${id}`);
+      setDetail(null);
+      if (query.trim()) await search(query, mode);
+      setNotice('Entry and version history permanently deleted.');
+    } catch (err) {
+      setNotice(err instanceof ApiRequestError ? err.message : 'Delete failed.');
     }
   }
 
@@ -289,6 +301,13 @@ export function MemoryVault() {
               Revoke (hide from search, keep history)
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => void deleteEntry(detail.entry.id)}
+            className="w-fit border border-magenta-neon px-3 py-1 text-sm text-magenta-soft hover:bg-navy-800"
+          >
+            Permanently delete entry and versions
+          </button>
 
           {detail.conflicts.length > 0 && (
             <section aria-labelledby="conflicts-title" className="border border-magenta-neon p-3">

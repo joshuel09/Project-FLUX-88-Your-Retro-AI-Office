@@ -75,6 +75,7 @@ consume grants directly.
 | GET | /memory/:id | Entry + versions + conflicts |
 | PATCH | /memory/:id | Correct (new version) |
 | POST | /memory/:id/revoke | Hide from search, keep history |
+| DELETE | /memory/:id | Permanently remove entry and version content; retain an audit tombstone |
 
 ## Integrations
 
