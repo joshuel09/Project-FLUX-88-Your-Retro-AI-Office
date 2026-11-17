@@ -5,7 +5,7 @@
  * entries stay labeled. Requires the dockerized Postgres (`pnpm db:up &&
  * pnpm db:migrate`); CI provides it.
  */
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AGENT_CONFIG_BY_ID, toPolicyConfig } from '@flux88/agents';
@@ -14,7 +14,7 @@ import { connectTestDb, truncateMutableTables } from '@flux88/db/testing';
 
 import { MockEmbedder } from './embedder.js';
 import { searchKeyword, searchSemantic } from './search.js';
-import { correctMemory, getMemory, revokeMemory, writeMemory } from './service.js';
+import { correctMemory, deleteMemory, getMemory, revokeMemory, writeMemory } from './service.js';
 import { readableCategories } from './write-rules.js';
 
 let db: Db;
@@ -168,6 +168,69 @@ describe('US3 — shared Memory Vault (scenario 3)', () => {
     const detail = await getMemory(db, written.entry.id);
     expect(detail?.versions).toHaveLength(2);
     expect(detail?.entry.revokedAt).not.toBeNull();
+  });
+
+  it('permanently deletes entry and versions but keeps a content-free audit tombstone', async () => {
+    const written = await writeMemory(db, embedder, { kind: 'owner' }, {
+      category: 'shared', title: 'Delete retention regression', body: 'Original confidential memory body.',
+    });
+    expect(written.ok).toBe(true);
+    if (!written.ok) return;
+    await correctMemory(db, embedder, { kind: 'owner' }, written.entry.id, { body: 'Corrected confidential memory body.' });
+
+    const deleted = await deleteMemory(db, { kind: 'owner' }, written.entry.id);
+
+    expect(deleted).toEqual({ ok: true, id: written.entry.id });
+    expect(await getMemory(db, written.entry.id)).toBeNull();
+    expect(await db.select().from(schema.memoryVersions).where(eq(schema.memoryVersions.memoryEntryId, written.entry.id))).toHaveLength(0);
+    const [audit] = await db.select().from(schema.auditEvents).where(and(
+      eq(schema.auditEvents.action, 'memory.delete'), eq(schema.auditEvents.targetId, written.entry.id),
+    ));
+    expect(audit).toMatchObject({ actorType: 'owner', actorId: 'session', payload: { reason: 'owner_confirmed' } });
+    expect(JSON.stringify(audit)).not.toContain('Delete retention regression');
+    expect(JSON.stringify(audit)).not.toContain('confidential memory body');
+  });
+
+  it('refuses non-owner permanent deletion and reports missing entries', async () => {
+    const written = await writeMemory(db, embedder, eleven, {
+      category: 'shared', title: 'Owner-only delete regression', body: 'Keep this memory.',
+    });
+    expect(written.ok).toBe(true);
+    if (!written.ok) return;
+
+    expect(await deleteMemory(db, eleven, written.entry.id)).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(await getMemory(db, written.entry.id)).not.toBeNull();
+    expect(await deleteMemory(db, { kind: 'owner' }, '00000000-0000-4000-8000-000000000001'))
+      .toMatchObject({ ok: false, code: 'not_found' });
+  });
+
+  it('rolls back permanent deletion if its audit tombstone cannot be written', async () => {
+    const written = await writeMemory(db, embedder, { kind: 'owner' }, {
+      category: 'shared', title: 'Delete audit rollback regression', body: 'Keep history on audit failure.',
+    });
+    expect(written.ok).toBe(true);
+    if (!written.ok) return;
+
+    await db.execute(sql`
+      CREATE FUNCTION reject_review_memory_delete_audit() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN
+        IF NEW.action = 'memory.delete' THEN
+          RAISE EXCEPTION 'simulated audit failure';
+        END IF;
+        RETURN NEW;
+      END;
+      $$;
+    `);
+    try {
+      await db.execute(sql`CREATE TRIGGER reject_review_memory_delete_audit BEFORE INSERT ON audit_events
+        FOR EACH ROW EXECUTE FUNCTION reject_review_memory_delete_audit()`);
+      await expect(deleteMemory(db, { kind: 'owner' }, written.entry.id)).rejects.toThrow();
+      expect(await getMemory(db, written.entry.id)).not.toBeNull();
+      expect(await db.select().from(schema.memoryVersions).where(eq(schema.memoryVersions.memoryEntryId, written.entry.id))).toHaveLength(1);
+    } finally {
+      await db.execute(sql`DROP TRIGGER IF EXISTS reject_review_memory_delete_audit ON audit_events`);
+      await db.execute(sql`DROP FUNCTION reject_review_memory_delete_audit()`);
+    }
   });
 
   it('labels untrusted writers and keeps the label in search results', async () => {
