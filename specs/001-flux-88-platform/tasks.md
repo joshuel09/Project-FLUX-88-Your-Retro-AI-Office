@@ -127,3 +127,12 @@
 ## Implementation strategy
 
 One PR per slice (per the owner's batching preference): Phase 2 foundational → US5 → US1 → US3 → US2 → US4+Polish. Each PR ends with its slice's integration/e2e tests green and a demoable state in mock mode. The owner merges each slice PR (org rule); /speckit-analyze consistency check precedes the first implementation PR.
+
+
+## Phase 9: Convergence
+
+- [ ] T058 [CRITICAL] Enforce the `flux88_worker` least-privilege role for every worker database operation and prevent worker elevation; the current worker uses the general `DATABASE_URL` and only selected transactions set the restricted role (Constitution II, plan Security Boundary 3, T006; gap: contradicts).
+- [ ] T059 [HIGH] Add policy-scoped memory search and write to agent task execution, including source and trust metadata in prompt assembly; agent profiles advertise memory tools, but the runner currently sends only the task title and description to the provider (FR-020/FR-025, US3 acceptance 1 and 4; gap: partial).
+- [ ] T060 [HIGH] Implement an audited deletion path for stale or incorrect memory entries with defined history-retention behavior; current memory supports correction and revocation, but has no deletion operation (FR-022; gap: partial).
+- [ ] T061 [HIGH] Add least-privilege service credentials and authenticated agent API access; current API routes use owner cookie-session authentication, with no agent service credential flow (FR-072; gap: missing).
+- [ ] T062 [MEDIUM] Reconcile the planned shadcn/ui and Radix primitive layer with the implemented hand-built component set, preserving accessibility checks and documenting or implementing the chosen design system (plan §Technical Context/§Constitution Check, T002; gap: partial).
