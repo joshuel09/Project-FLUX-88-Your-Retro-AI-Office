@@ -22,13 +22,14 @@ set +a
 pnpm install --frozen-lockfile
 pnpm db:up
 pnpm --filter @flux88/db db:migrate
+pnpm --filter @flux88/db db:provision-worker-role
 pnpm --filter @flux88/db db:seed
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). On first run, enter your email and a password with at least 12 characters; that creates the single owner account. The seed adds the 18 agent profiles, budgets, mock connectors, and sample tasks. The default service ports are web `3000`, API `3001`, Postgres `5488`, and Redis `6388`.
 
-`env.example` lists the local defaults. API and worker read process environment variables and built-in defaults; copying a `.env` file alone does not load overrides into those processes. The commands above export the file values in the shell before startup. Generate a new `SESSION_SECRET` and review all settings before exposing a deployment beyond local demo use. Do not add real credentials to the repository.
+`env.example` lists local demo defaults, including a separate worker login. Copying a `.env` file alone does not load overrides into the processes; the commands above export those values in the shell. The worker refuses to start until its login is provisioned after migrations. Before exposing a deployment beyond local demo use, set unique database credentials and generate a new `SESSION_SECRET`. Do not add real credentials to the repository.
 
 Stop the app with `Ctrl+C`; stop the database services with `pnpm db:down`. Compose keeps its named data volumes unless you remove them separately.
 

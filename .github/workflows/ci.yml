@@ -34,6 +34,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://flux88:flux88_local_dev@localhost:5488/flux88
+      WORKER_DATABASE_URL: postgres://flux88_worker_login:flux88_worker_dev@localhost:5488/flux88
       REDIS_URL: redis://localhost:6388
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +67,10 @@ jobs:
         run: pnpm build
 
       - name: Migrate and seed database
-        run: pnpm --filter @flux88/db db:migrate && pnpm --filter @flux88/db db:seed
+        run: |
+          pnpm --filter @flux88/db db:migrate
+          pnpm --filter @flux88/db db:provision-worker-role
+          pnpm --filter @flux88/db db:seed
 
       - name: Unit tests
         run: pnpm test

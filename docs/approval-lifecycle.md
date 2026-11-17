@@ -54,9 +54,11 @@ The inbox UI, runner proposals and full execution-time target/permission revalid
 The worker polls PostgreSQL immediately on startup and every second, processing at most
 25 ready records per batch. No Redis job is required to rediscover a pending delivery.
 Concurrent pollers use `FOR UPDATE SKIP LOCKED`. Each dispatch transaction runs as
-`flux88_worker` via `SET LOCAL ROLE`; the connection must be allowed to assume that
-migration-created role. Approval tables remain SELECT-only. This restriction applies to
-the outbox transaction, not the other existing task-worker connections.
+`flux88_worker` via `SET LOCAL ROLE`; the worker connects with a separate non-superuser
+login that inherits only the grants from this migration-created role. Run
+`db:provision-worker-role` after migrations to provision that login from
+`WORKER_DATABASE_URL`. All worker processes use this restricted login; approval tables
+remain SELECT-only, and the login cannot switch to the admin connection role.
 
 Only `mock` records with an exact immutable approved-request/consumed-grant binding,
 matching operation and idempotency key, an unexpired approval, an unchanged mock target

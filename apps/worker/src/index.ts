@@ -12,9 +12,17 @@ import type { WorkerDeps } from './deps.js';
 import { createQueueBundle } from './queues/index.js';
 import { reconcile } from './reconcile.js';
 import { startOutboxDispatcher } from './outbox.js';
+import { assertWorkerDatabaseRole } from './worker-db-role.js';
 
 const config = loadConfig();
-const db = createDb(config.DATABASE_URL);
+if (!config.WORKER_DATABASE_URL) {
+  throw new Error('WORKER_DATABASE_URL must use a non-superuser member of flux88_worker.');
+}
+if (new URL(config.WORKER_DATABASE_URL).username === new URL(config.DATABASE_URL).username) {
+  throw new Error('WORKER_DATABASE_URL must use a separate login from DATABASE_URL.');
+}
+const db = createDb(config.WORKER_DATABASE_URL);
+await assertWorkerDatabaseRole(db);
 const bundle = createQueueBundle(config.REDIS_URL);
 
 // Phase 1 is mock-only; Phase 2 selects ClaudeProvider when MOCK_LLM=false.
