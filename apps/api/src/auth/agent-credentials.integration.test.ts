@@ -18,6 +18,7 @@ async function issueCredential(agentId = 'eleven') {
     method: 'POST', headers: { ...ORIGIN, Cookie: cookie }, body: '{}',
   });
   expect(response.status).toBe(201);
+  expect(response.headers.get('cache-control')).toBe('no-store');
   return await response.json() as { id: string; token: string; expiresAt: string };
 }
 

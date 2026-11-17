@@ -47,6 +47,7 @@ export function agentsRoutes(db: Db) {
     if (!agent.enabled) return c.json({ error: { code: 'agent_disabled', message: 'Enable the agent before issuing a credential' } }, 409);
     const credential = await rotateAgentCredential(db, id);
     emitEvent({ channel: 'audit', data: { kind: 'agent.credential_issued', agentId: id } });
+    c.header('Cache-Control', 'no-store');
     return c.json({ id: credential.id, token: credential.token, expiresAt: credential.expiresAt.toISOString() }, 201);
   });
 
