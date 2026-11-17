@@ -53,25 +53,32 @@ export class FailureInjectingProvider implements LLMProvider {
 export class FailureInjectionHarness {
   readonly projectName = `flux88-failure-${randomUUID().replaceAll('-', '').slice(0, 12)}`;
   databaseUrl: string;
+  workerDatabaseUrl: string;
   redisUrl: string;
   private readonly composeEnv: NodeJS.ProcessEnv;
   private readonly workers = new Set<OwnedWorker>();
   private closed = false;
 
-  private constructor(password: string) {
-    this.composeEnv = { ...process.env, FAILURE_TEST_PG_PASSWORD: password };
+  private constructor(password: string, workerPassword: string) {
+    this.composeEnv = {
+      ...process.env,
+      FAILURE_TEST_PG_PASSWORD: password,
+      FAILURE_TEST_WORKER_PASSWORD: workerPassword,
+    };
     this.databaseUrl = `postgres://flux88:${password}@127.0.0.1:1/flux88_failure`;
+    this.workerDatabaseUrl = `postgres://flux88_worker_login:${workerPassword}@127.0.0.1:1/flux88_failure`;
     this.redisUrl = 'redis://127.0.0.1:1';
   }
 
   static async create(): Promise<FailureInjectionHarness> {
-    const harness = new FailureInjectionHarness(randomBytes(24).toString('hex'));
+    const harness = new FailureInjectionHarness(randomBytes(24).toString('hex'), randomBytes(24).toString('hex'));
     try {
       await harness.compose(['up', '--detach', '--wait', '--wait-timeout', '90']);
       const pgPort = await harness.publishedPort('postgres', 5432);
       const redisPort = await harness.publishedPort('redis', 6379);
       Object.assign(harness, {
         databaseUrl: `postgres://flux88:${harness.composeEnv.FAILURE_TEST_PG_PASSWORD}@127.0.0.1:${pgPort}/flux88_failure`,
+        workerDatabaseUrl: `postgres://flux88_worker_login:${harness.composeEnv.FAILURE_TEST_WORKER_PASSWORD}@127.0.0.1:${pgPort}/flux88_failure`,
         redisUrl: `redis://127.0.0.1:${redisPort}`,
       });
       return harness;
@@ -94,8 +101,9 @@ export class FailureInjectionHarness {
   }
 
   async migrateDatabase() {
-    const env = { ...this.composeEnv, DATABASE_URL: this.databaseUrl };
+    const env = { ...this.composeEnv, DATABASE_URL: this.databaseUrl, WORKER_DATABASE_URL: this.workerDatabaseUrl };
     await run('pnpm', ['--filter', '@flux88/db', 'db:migrate'], repositoryRoot, env);
+    await run('pnpm', ['--filter', '@flux88/db', 'db:provision-worker-role'], repositoryRoot, env);
   }
 
   async pingPostgres() {
@@ -106,8 +114,10 @@ export class FailureInjectionHarness {
     await this.compose(['restart', 'postgres']);
     const port = await this.publishedPort('postgres', 5432);
     const password = this.composeEnv.FAILURE_TEST_PG_PASSWORD;
-    if (!password) throw new Error('failure harness database password is missing');
+    const workerPassword = this.composeEnv.FAILURE_TEST_WORKER_PASSWORD;
+    if (!password || !workerPassword) throw new Error('failure harness database password is missing');
     this.databaseUrl = `postgres://flux88:${password}@127.0.0.1:${port}/flux88_failure`;
+    this.workerDatabaseUrl = `postgres://flux88_worker_login:${workerPassword}@127.0.0.1:${port}/flux88_failure`;
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
       try {
@@ -142,7 +152,14 @@ export class FailureInjectionHarness {
     if (this.closed) throw new Error('failure harness is closed');
     const child = spawn(command, args, {
       cwd: repositoryRoot,
-      env: { ...process.env, ...extraEnv, DATABASE_URL: this.databaseUrl, REDIS_URL: this.redisUrl, MOCK_LLM: 'true' },
+      env: {
+        ...process.env,
+        ...extraEnv,
+        DATABASE_URL: this.databaseUrl,
+        WORKER_DATABASE_URL: this.workerDatabaseUrl,
+        REDIS_URL: this.redisUrl,
+        MOCK_LLM: 'true',
+      },
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: process.platform !== 'win32',
     });
