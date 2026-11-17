@@ -12,6 +12,7 @@ import {
   MEMORY_CATEGORIES,
   MockEmbedder,
   correctMemory,
+  deleteMemory,
   getMemory,
   readableCategories,
   revokeMemory,
@@ -101,6 +102,17 @@ export function memoryRoutes(db: Db) {
     }
     emitEvent({ channel: 'audit', data: { kind: 'memory.revoke', memoryId: id.data } });
     return c.json(result.entry);
+  });
+
+  app.delete('/:id', async (c) => {
+    const id = idSchema.safeParse(c.req.param('id'));
+    if (!id.success) return c.json({ error: { code: 'not_found', message: 'Unknown memory entry' } }, 404);
+    const result = await deleteMemory(db, OWNER, id.data);
+    if (!result.ok) {
+      return c.json({ error: { code: result.code, message: result.message } }, result.code === 'not_found' ? 404 : 403);
+    }
+    emitEvent({ channel: 'audit', data: { kind: 'memory.delete', memoryId: id.data } });
+    return c.json({ ok: true });
   });
 
   return app;

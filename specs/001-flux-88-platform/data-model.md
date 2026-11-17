@@ -86,7 +86,7 @@ One LLM-or-mock execution of an agent against a task.
 - `title`, `body`, `source_attribution`, `confidence` (0–1)
 - `verification_status` ∈ {verified, proposed, untrusted} (FR-021/FR-025)
 - `author` (agent id|owner), `embedding vector?`, FTS column (keyword search)
-- `revoked_at?` (revocation keeps history, hides from search; FR-022)
+- `revoked_at?` (revocation keeps history, hides from search; FR-022). Permanent owner deletion removes the entry and cascaded version bodies; append-only audit retains actor, entry ID and a fixed reason without memory content.
 - `dedupe_hash`, `conflicts_with?[]` (surfaced, not auto-resolved)
 - Write-permission matrix per (agent, category) lives in agent config (FR-023);
   secret-shaped content rejected at write (FR-024)

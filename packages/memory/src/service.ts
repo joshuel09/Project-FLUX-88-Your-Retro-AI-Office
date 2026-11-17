@@ -202,6 +202,10 @@ export type MemoryActionResult =
   | { ok: true; entry: MemoryEntryRow }
   | { ok: false; code: 'not_found' | 'forbidden' | 'secret_rejected'; message: string };
 
+export type MemoryDeleteResult =
+  | { ok: true; id: string }
+  | { ok: false; code: 'not_found' | 'forbidden'; message: string };
+
 function mayModify(actor: MemoryActor, entry: MemoryEntryRow): boolean {
   if (actor.kind === 'owner') return true;
   if (actor.kind === 'agent') return entry.author === actor.agentId;
@@ -299,5 +303,39 @@ export async function revokeMemory(db: Db, actor: MemoryActor, id: string): Prom
       ...actorAudit(actor), action: 'memory.revoke', targetType: 'memory', targetId: id, payload: {},
     });
     return { ok: true as const, entry: updated };
+  });
+}
+
+/** Permanent owner deletion removes the entry and version bodies; audit keeps only a tombstone. */
+export async function deleteMemory(db: Db, actor: MemoryActor, id: string): Promise<MemoryDeleteResult> {
+  return db.transaction(async (tx) => {
+    const [initial] = await tx.select().from(memoryEntries).where(eq(memoryEntries.id, id));
+    if (!initial) return { ok: false as const, code: 'not_found' as const, message: 'Unknown memory entry' };
+    await lockClaim(tx, initial.category, initial.title);
+    const [entry] = await tx.select().from(memoryEntries).where(eq(memoryEntries.id, id)).for('update');
+    if (!entry) return { ok: false as const, code: 'not_found' as const, message: 'Unknown memory entry' };
+    if (actor.kind !== 'owner') {
+      await tx.insert(schema.auditEvents).values({
+        ...actorAudit(actor), action: 'memory.write_refused', targetType: 'memory', targetId: id,
+        payload: { during: 'deletion', reason: 'owner_required' },
+      });
+      return { ok: false as const, code: 'forbidden' as const, message: 'Only the owner may permanently delete an entry.' };
+    }
+
+    const conflicts = await tx.select().from(memoryEntries)
+      .where(sql`${memoryEntries.conflictsWith} @> ${JSON.stringify([id])}::jsonb`)
+      .for('update');
+    for (const conflict of conflicts) {
+      await tx.update(memoryEntries).set({
+        conflictsWith: ((conflict.conflictsWith as string[] | null) ?? []).filter((conflictId) => conflictId !== id),
+        updatedAt: new Date(),
+      }).where(eq(memoryEntries.id, conflict.id));
+    }
+    await tx.delete(memoryEntries).where(eq(memoryEntries.id, id));
+    await tx.insert(schema.auditEvents).values({
+      ...actorAudit(actor), action: 'memory.delete', targetType: 'memory', targetId: id,
+      payload: { reason: 'owner_confirmed' },
+    });
+    return { ok: true as const, id: entry.id };
   });
 }
