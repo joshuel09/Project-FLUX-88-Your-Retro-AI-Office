@@ -5,6 +5,7 @@ import { createTask, listAudit, schema } from '@flux88/db';
 import { connectTestDb, truncateMutableTables } from '@flux88/db/testing';
 import { MockEmbedder, writeMemory } from '@flux88/memory';
 import type { CompletionRequest, CompletionResult, LLMProvider } from '@flux88/llm';
+import type { AgentId } from '@flux88/core';
 
 import type { WorkerDeps } from '../deps.js';
 import { runAgentTask } from './index.js';
@@ -28,12 +29,18 @@ class MemoryProvider implements LLMProvider {
   }
 }
 
-async function execute(provider: MemoryProvider, title = 'Research scanline cache rate limits') {
+async function execute(
+  provider: MemoryProvider,
+  title = 'Research scanline cache rate limits',
+  agentId: AgentId = 'eleven',
+  origin: 'local' | 'github' | 'trello' = 'local',
+) {
   const task = await createTask(db, {
     title,
     description: 'Review scanline cache behavior and report evidence.',
     creator: 'owner',
-    assigneeAgentId: 'eleven',
+    assigneeAgentId: agentId,
+    origin,
     status: 'ready',
   });
   const deps: WorkerDeps = {
@@ -108,11 +115,25 @@ describe('T059 agent memory runtime', () => {
     expect(audit).toContainEqual(expect.objectContaining({ actorType: 'agent', actorId: 'eleven', targetId: entry!.id }));
   });
 
+  it('forces external-origin memory proposals to untrusted even when the provider omits the label', async () => {
+    const provider = new MemoryProvider([{
+      category: 'shared',
+      title: 'External issue finding',
+      body: 'An imported issue contains a rate-limit claim.',
+      sourceAttribution: 'GitHub issue 42',
+    }]);
+    await execute(provider, 'Summarize imported issue', 'eleven', 'github');
+
+    const [entry] = await db.select().from(schema.memoryEntries);
+    expect(entry).toMatchObject({ author: 'eleven', verificationStatus: 'untrusted' });
+  });
+
   it('refuses unauthorized and secret-shaped agent memory writes without logging content', async () => {
     const secret = 'ghp_123456789012345678901234567890123456';
     const provider = new MemoryProvider([
-      { category: 'ops', title: 'Unauthorized ops note', body: 'No ops write grant.' },
-      { category: 'shared', title: 'Credential leak', body: `token=${secret}` },
+      { category: 'ops', title: 'Unauthorized ops note', body: 'No ops write grant.', sourceAttribution: 'task result' },
+      { category: 'shared', title: 'Credential leak', body: `token=${secret}`, sourceAttribution: 'task result' },
+      { category: 'project', title: 'Unbound project note', body: 'No trusted project id.', sourceAttribution: 'task result', projectId: 'other-project' },
     ]);
     await execute(provider, 'Research agent memory refusal cases');
 
@@ -123,6 +144,29 @@ describe('T059 agent memory runtime', () => {
       'memory.write_refused',
       'memory.secret_rejected',
     ]));
+    expect(audit).toContainEqual(expect.objectContaining({ payload: expect.objectContaining({ reason: 'project_context_unavailable' }) }));
     expect(JSON.stringify(audit)).not.toContain(secret);
+  });
+
+  it('does not search or write when the agent lacks those tools', async () => {
+    const ownerMemory = await writeMemory(db, embedder, { kind: 'owner' }, {
+      category: 'shared',
+      title: 'Tool gate memory',
+      body: 'This entry should not reach marty.',
+      sourceAttribution: 'owner note',
+    });
+    expect(ownerMemory.ok).toBe(true);
+    const provider = new MemoryProvider([{
+      category: 'shared',
+      title: 'Unauthorized tool write',
+      body: 'No memory.write tool grant.',
+      sourceAttribution: 'task result',
+    }]);
+    await execute(provider, 'Research tool gate memory', 'marty');
+
+    expect(provider.request?.prompt).not.toContain('This entry should not reach marty.');
+    expect(await db.select().from(schema.memoryEntries)).toHaveLength(1);
+    const audit = await listAudit(db, { actorId: 'marty', targetType: 'memory', action: 'memory.write_refused', limit: 10 });
+    expect(audit).toContainEqual(expect.objectContaining({ payload: expect.objectContaining({ reason: 'tool_not_granted' }) }));
   });
 });

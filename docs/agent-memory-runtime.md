@@ -9,8 +9,9 @@ block. Memory text cannot act as instructions or authorization.
 Structured memory write proposals from a provider are validated before the worker calls
 the Memory Vault service with the assigned agent identity and policy. The service enforces
 category grants, secret rejection, deduplication, attribution, and audit. Agent writes
-cannot set a verified status; they remain proposed unless explicitly downgraded to
-untrusted.
+cannot set a verified status. They remain proposed unless explicitly downgraded to
+untrusted; writes from GitHub/Trello tasks, or runs that retrieved untrusted memory, are
+forced to untrusted regardless of the provider's label.
 
 Task records do not have a project identifier yet. Agent runs therefore do not read or
 write project-scoped entries. Project entries are refused at runtime until a trusted

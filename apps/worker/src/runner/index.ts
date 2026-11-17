@@ -194,10 +194,17 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
   const started = Date.now();
   try {
     const taskText = `${task.title}${task.description ? `\n${task.description}` : ''}`;
-    const prompt = await assembleAgentPrompt(deps.db, agentId, policy, taskText);
+    const promptContext = await assembleAgentPrompt(deps.db, agentId, policy, taskText);
+    const prompt = promptContext.prompt;
     const result = await completeWithinBudget(deps, agentId, prompt, budgets);
     const durationMs = Date.now() - started;
-    await persistAgentMemoryWrites(deps.db, agentId, policy, result.memoryWrites);
+    await persistAgentMemoryWrites(
+      deps.db,
+      agentId,
+      policy,
+      result.memoryWrites,
+      task.origin !== 'local' || promptContext.hasUntrustedMemory,
+    );
 
     if (result.proposedAction !== undefined) {
       const staged = await stageProposedAction(deps.db, { taskId, runId: run.id, agentId, durationMs }, result);

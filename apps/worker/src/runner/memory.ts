@@ -31,8 +31,8 @@ export async function assembleAgentPrompt(
   agentId: AgentId,
   policy: PolicyConfig,
   taskText: string,
-): Promise<string> {
-  if (!policy.allowedTools.includes('memory.search')) return taskText;
+): Promise<{ prompt: string; hasUntrustedMemory: boolean }> {
+  if (!policy.allowedTools.includes('memory.search')) return { prompt: taskText, hasUntrustedMemory: false };
   const hits = await searchSemantic(db, embedder, taskText, {
     categories: readableCategories({ kind: 'agent', policy }),
     actor: { kind: 'agent', agentId },
@@ -50,7 +50,10 @@ export async function assembleAgentPrompt(
     title: hit.title,
     content: hit.body,
   }, null, 2)));
-  return assemblePrompt(taskText, entries);
+  return {
+    prompt: assemblePrompt(taskText, entries),
+    hasUntrustedMemory: hits.some((hit) => hit.verificationStatus === 'untrusted'),
+  };
 }
 
 export async function persistAgentMemoryWrites(
@@ -58,6 +61,7 @@ export async function persistAgentMemoryWrites(
   agentId: AgentId,
   policy: PolicyConfig,
   output: unknown,
+  forceUntrusted: boolean,
 ): Promise<void> {
   if (output === undefined) return;
   const audit = { actorType: 'agent' as const, actorId: agentId };
@@ -95,6 +99,12 @@ export async function persistAgentMemoryWrites(
       });
       continue;
     }
-    await writeMemory(db, embedder, { kind: 'agent', agentId, policy }, proposal as MemoryWriteInput);
+    const verificationStatus = forceUntrusted || proposal.verificationStatus === 'untrusted'
+      ? 'untrusted'
+      : 'proposed';
+    await writeMemory(db, embedder, { kind: 'agent', agentId, policy }, {
+      ...proposal,
+      verificationStatus,
+    } as MemoryWriteInput);
   }
 }
