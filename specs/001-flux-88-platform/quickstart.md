@@ -44,7 +44,7 @@ Use [`docs/demo-phase-1.md`](../../docs/demo-phase-1.md) for the short presenter
 |---|---|---|
 | 1. Delegation | DOC decomposes the tested owner goal into three specialist subtasks; the browser shows live completion, dependency edges, and a handoff timeline. Runs through the mock provider. | `apps/worker/src/orchestrator/doc.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/release-gate.spec.ts` |
 | 2. Restart recovery | A disposable harness writes task, run, approval, grant, memory, outbox, and audit fixtures, restarts Postgres and Redis, checks persisted records, then verifies one interrupted worker run recovers. It does not restart or inspect the demo database. | `pnpm --dir e2e exec playwright test tests/restart.spec.ts --workers=1` |
-| 3. Memory attribution | The service integration test checks agent attribution and write rules. The browser test saves owner knowledge, searches, inspects verification status, and revokes the entry. | `packages/memory/src/service.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/us3-memory-vault.spec.ts` |
+| 3. Memory attribution | Service tests check agent attribution and write rules; the worker test checks policy-scoped retrieval, untrusted prompt framing, and validated agent writes. The browser test saves owner knowledge, searches, inspects verification status, and revokes the entry. | `packages/memory/src/service.integration.test.ts`, `apps/worker/src/runner/memory.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/us3-memory-vault.spec.ts` |
 | 4. Approval lifecycle | API integration tests cover owner reauthentication, immutable decisions, expiry, one-time grants, and audit records. The approval inbox browser test uses a stubbed API fixture; a full browser-to-worker approval journey is not verified by that test. | `apps/api/src/policy/approvals.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/us2-approval-inbox.spec.ts` |
 | 5. Injection resistance | Adversarial fixtures remain tagged as untrusted; forged permissions and approval grants are refused; connector content cannot be written as verified memory. | `pnpm --dir e2e exec playwright test adversarial/injection.spec.ts --workers=1` |
 | 6. Failure handling | Disposable harness checks provider failure, worker termination, Redis and Postgres restart. These are local injected failures, not live-provider outages. | `pnpm --dir e2e exec playwright test tests/failure-harness.spec.ts --workers=1` |
@@ -80,5 +80,6 @@ The release sweep measured **18.3 seconds** from a shallow clone to an authentic
 - [Data model](data-model.md)
 - [API contract](contracts/api.md)
 - [Agent registry](agents.md)
+- [Agent memory runtime](../../docs/agent-memory-runtime.md)
 - [Phase 1 demo script](../../docs/demo-phase-1.md)
 - [Release gate evidence](../../docs/release-gate.md)

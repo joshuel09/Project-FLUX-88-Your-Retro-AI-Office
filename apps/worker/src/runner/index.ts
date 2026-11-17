@@ -23,6 +23,7 @@ import {
 import type { CompletionResult } from '@flux88/llm';
 
 import type { WorkerDeps } from '../deps.js';
+import { assembleAgentPrompt, persistAgentMemoryWrites } from './memory.js';
 import { stageProposedAction } from './proposals.js';
 
 class RunFailure extends Error {
@@ -36,8 +37,8 @@ class RunFailure extends Error {
 
 async function completeWithinBudget(
   deps: WorkerDeps,
-  task: TaskRow,
   agentId: string,
+  prompt: string,
   budgets: { maxTokensPerRun: number; maxRuntimeMs: number },
 ): Promise<CompletionResult> {
   let timer: NodeJS.Timeout | undefined;
@@ -48,7 +49,7 @@ async function completeWithinBudget(
     const result = await Promise.race([
       deps.provider.complete({
         agentId,
-        prompt: `${task.title}${task.description ? `\n${task.description}` : ''}`,
+        prompt,
         maxTokens: budgets.maxTokensPerRun,
       }),
       timeout,
@@ -187,12 +188,16 @@ export async function runAgentTask(deps: WorkerDeps, taskId: string): Promise<vo
     await finishRun(deps.db, run.id, { status: 'failed', error: 'agent_missing' });
     return;
   }
-  const budgets = toPolicyConfig(agent.config as AgentConfig).budgets;
+  const policy = toPolicyConfig(agent.config as AgentConfig);
+  const budgets = policy.budgets;
 
   const started = Date.now();
   try {
-    const result = await completeWithinBudget(deps, task, agentId, budgets);
+    const taskText = `${task.title}${task.description ? `\n${task.description}` : ''}`;
+    const prompt = await assembleAgentPrompt(deps.db, agentId, policy, taskText);
+    const result = await completeWithinBudget(deps, agentId, prompt, budgets);
     const durationMs = Date.now() - started;
+    await persistAgentMemoryWrites(deps.db, agentId, policy, result.memoryWrites);
 
     if (result.proposedAction !== undefined) {
       const staged = await stageProposedAction(deps.db, { taskId, runId: run.id, agentId, durationMs }, result);

@@ -22,6 +22,8 @@ export interface CompletionResult {
   content: string;
   /** Untrusted action data; never an executable tool call or authorization. */
   proposedAction?: unknown;
+  /** Untrusted memory proposals; the worker validates each against agent policy. */
+  memoryWrites?: unknown;
   usage: LLMUsage;
 }
 

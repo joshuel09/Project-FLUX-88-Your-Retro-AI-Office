@@ -16,6 +16,8 @@ const { memoryEntries } = schema;
 
 export interface MemorySearchHit {
   id: string;
+  scope: 'shared' | 'project' | 'private';
+  projectId: string | null;
   category: string;
   title: string;
   body: string;
@@ -51,6 +53,8 @@ function visibility(opts: MemorySearchOptions) {
 
 const hitColumns = {
   id: memoryEntries.id,
+  scope: memoryEntries.scope,
+  projectId: memoryEntries.projectId,
   category: memoryEntries.category,
   title: memoryEntries.title,
   body: memoryEntries.body,
