@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 
 import type { Db } from '@flux88/db';
 import { writeAudit } from '@flux88/db';
@@ -16,9 +16,10 @@ export function auditMutations(db: Db): MiddlewareHandler {
     if (!MUTATING.has(c.req.method)) return;
     if (c.res.status >= 400) return;
     if (c.req.path.startsWith('/api/v1/auth')) return; // auth routes write their own events
+    const agentId = (c as Context<{ Variables: { agentId?: string } }>).get('agentId');
     await writeAudit(db, {
-      actorType: 'owner',
-      actorId: 'session',
+      actorType: agentId ? 'agent' : 'owner',
+      actorId: agentId ?? 'session',
       action: `http.${c.req.method.toLowerCase()}`,
       targetType: 'route',
       targetId: c.req.path,

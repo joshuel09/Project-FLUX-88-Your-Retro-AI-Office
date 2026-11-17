@@ -14,7 +14,7 @@ import {
   uuid,
   vector,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { isNull, sql } from 'drizzle-orm';
 
 import { AGENT_IDS, CRITICAL_ACTION_CATEGORIES, DEPARTMENTS, OFFICE_AREAS, TASK_STATUSES } from '@flux88/core';
 
@@ -55,6 +55,21 @@ export const agents = pgTable('agents', {
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
+
+/** Hash-only bearer credentials for bounded agent API access (FR-072). */
+export const agentServiceCredentials = pgTable('agent_service_credentials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: agentIdEnum('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  tokenHash: text('token_hash').notNull(),
+  createdAt: createdAt(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+}, (t) => [
+  uniqueIndex('agent_service_credentials_hash_idx').on(t.tokenHash),
+  uniqueIndex('agent_service_credentials_active_agent_idx').on(t.agentId).where(isNull(t.revokedAt)),
+  index('agent_service_credentials_agent_idx').on(t.agentId),
+]);
 
 export const tasks = pgTable(
   'tasks',

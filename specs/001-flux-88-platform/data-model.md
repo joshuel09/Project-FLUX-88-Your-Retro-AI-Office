@@ -63,6 +63,10 @@ One LLM-or-mock execution of an agent against a task.
 - `input_tokens`, `output_tokens`, `cost_cents`, `duration_ms` (FR-016)
 - `idempotency_key` (dedupe, FR-017), `error?`, `simulated`
 
+### agent_service_credentials
+- `id`, `agent_id`, one-way `token_hash`, `created_at`, `expires_at`, `revoked_at?`, `last_used_at?`
+- Owner rotation revokes the prior active token. Plaintext token is returned only at issuance.
+
 ### agent_action_proposals
 - PostgreSQL worker-to-API inbox keyed one-to-one by the actual `agent_runs.id`
 - `proposal` contains only a bounded critical action, exact target, impact, risks and payload

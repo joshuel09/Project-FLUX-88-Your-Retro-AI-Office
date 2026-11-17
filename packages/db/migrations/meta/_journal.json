@@ -36,6 +36,20 @@
       "when": 1794452506503,
       "tag": "0004_ambiguous_sugar_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794913791197,
+      "tag": "0005_abnormal_whizzer",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794942382941,
+      "tag": "0006_wild_meteorite",
+      "breakpoints": true
     }
   ]
 }

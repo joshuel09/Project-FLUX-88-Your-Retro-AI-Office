@@ -190,8 +190,10 @@ development, the latter ships with the product. `.claude/` is currently gitignor
 1. **Owner ↔ dashboard**: password login per constitution (Argon2id, generic errors,
    5-failure lockout, session re-issue, Secure/HttpOnly/SameSite cookies, CSRF tokens on
    all mutations).
-2. **Dashboard ↔ API**: session-authenticated; all input zod-validated server-side; SSE
-   for live updates.
+2. **Clients ↔ API**: the dashboard uses owner sessions; the isolated agent route group
+   uses expiring, hash-only bearer credentials, derives agent identity server-side, and
+   checks assigned-task scope and configured tool grants. All input is zod-validated;
+   mutations are origin-checked and audited.
 3. **Worker ↔ API/DB**: worker runs with its own least-privilege DB role; it cannot mint
    or consume approval grants or create outbox actions (T040). It may stage bounded,
    untrusted proposed-action records in a separate insert-only inbox; the API derives

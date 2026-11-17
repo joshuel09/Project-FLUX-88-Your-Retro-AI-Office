@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "agent_service_credentials_active_agent_idx" ON "agent_service_credentials" USING btree ("agent_id") WHERE "agent_service_credentials"."revoked_at" is null;
