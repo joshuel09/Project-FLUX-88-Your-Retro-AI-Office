@@ -82,12 +82,16 @@
 
 ## D9. UI stack & theming
 
-- **Decision**: Tailwind CSS v4 + shadcn/ui (Radix primitives); theme tokens on `:root`
-  with light/dark; retro effects (CRT/scanlines/glow) as opt-in CSS layers disabled under
-  `prefers-reduced-motion` and a manual toggle; original pixel-accent assets only.
-- **Rationale**: Brief preference; Radix gives the accessibility baseline (Principle X).
-- **Alternatives**: Custom component library (slower, re-solves a11y), Mantine/MUI (fights
-  the retro aesthetic).
+- **Initial plan**: Tailwind CSS v4 + shadcn/ui (Radix primitives), with theme tokens,
+  reduced-motion handling, and accessible components.
+- **Implemented / T062 decision**: Keep the existing Tailwind CSS v4 theme and hand-built
+  semantic React/native components for Phase 1. The delivered web package has no shadcn/ui
+  or Radix dependency. Accessibility relies on semantic controls, visible focus styles,
+  measured token contrast, reduced-motion support, and the Playwright/axe release gate.
+- **Rationale**: This matches the small component set already implemented and keeps the
+  existing accessibility gate as the verification baseline. See `docs/design-system.md`.
+- **Future option**: Adopt Radix primitives when a component needs behavior that native
+  controls cannot provide, preserving the current token and accessibility checks.
 
 ## D10. Testing strategy
 
