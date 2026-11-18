@@ -18,7 +18,7 @@
 ## Phase 1: Setup
 
 - [x] T001 Add Drizzle ORM, drizzle-kit, postgres driver and vitest workspace config: update `packages/db/package.json`, create `packages/db/drizzle.config.ts`, root `vitest.workspace.ts`
-- [x] T002 [P] Add Tailwind CSS v4 + shadcn/ui base to `apps/web` (`apps/web/tailwind.config.ts`, `apps/web/app/globals.css`, `apps/web/components/ui/`) with retro theme tokens on `:root` (neon cyan `#5df3ff`, magenta `#ff3df0`, navy `#0b1026`, amber `#ffd37a`) incl. dark/light + `prefers-reduced-motion` guards
+- [x] T002 [P] Add Tailwind CSS v4 and retro theme tokens (`apps/web/app/globals.css`) with reduced-motion guards; delivered UI uses hand-built semantic React components and native controls, with no shadcn/ui or Radix dependency (T062; `docs/design-system.md`)
 - [x] T003 [P] Add Playwright e2e scaffold with axe-core accessibility fixture in `e2e/playwright.config.ts`, `e2e/fixtures/a11y.ts`
 - [x] T004 [P] Add integration-test harness that starts Postgres+Redis via `infra/docker-compose.yml` and truncates between tests in `packages/db/src/testing/harness.ts`
 
@@ -135,4 +135,4 @@ One PR per slice (per the owner's batching preference): Phase 2 foundational →
 - [x] T059 [HIGH] Add policy-scoped memory search and write to agent task execution, including source and trust metadata in prompt assembly; agent profiles advertise memory tools, but the runner currently sends only the task title and description to the provider (FR-020/FR-025, US3 acceptance 1 and 4; gap: partial).
 - [x] T060 [HIGH] Implement an audited deletion path for stale or incorrect memory entries with defined history-retention behavior; current memory supports correction and revocation, but has no deletion operation (FR-022; gap: partial).
 - [x] T061 [HIGH] Add least-privilege service credentials and authenticated agent API access; current API routes use owner cookie-session authentication, with no agent service credential flow (FR-072; gap: missing).
-- [ ] T062 [MEDIUM] Reconcile the planned shadcn/ui and Radix primitive layer with the implemented hand-built component set, preserving accessibility checks and documenting or implementing the chosen design system (plan §Technical Context/§Constitution Check, T002; gap: partial).
+- [x] T062 [MEDIUM] Document the implemented Tailwind design system and hand-built component conventions; preserve the existing axe accessibility release gate and align plan/research/task docs (plan §Technical Context/§Constitution Check, T002).

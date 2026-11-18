@@ -19,7 +19,7 @@ surrounding architecture.
 
 **Language/Version**: TypeScript 5.x on Node.js 22 LTS (ESM throughout)
 
-**Primary Dependencies**: Next.js (App Router) + React; Tailwind CSS + shadcn/ui; Hono
+**Primary Dependencies**: Next.js (App Router) + React; Tailwind CSS v4 with hand-built semantic components; Hono
 (typed HTTP API, zod validation); Drizzle ORM; BullMQ; `@anthropic-ai/sdk` behind a
 provider abstraction; octokit / discord.js / Trello REST behind connector adapters
 
@@ -59,7 +59,7 @@ views; no multi-tenant scaling requirements through P4
 | VII Minimal side effects | PASS | Connectors read-only by default; write methods require an `ApprovalGrant` token parameter by construction |
 | VIII Cost awareness | PASS | `agent_runs` records tokens/time/cost; budget middleware halts over-budget runs |
 | IX Spec-first | PASS | This plan follows spec.md; implementation starts only after /speckit-tasks and owner GO |
-| X Accessibility | PASS | shadcn/ui primitives (Radix) + reduced-motion media query + WCAG checks in e2e |
+| X Accessibility | PASS | Semantic React/native controls, reduced-motion media query and manual toggle, measured token contrast, and WCAG checks in e2e; see `docs/design-system.md` |
 
 ## Architecture
 
@@ -137,7 +137,7 @@ apps/
 ├── web/                 # Next.js App Router dashboard (office areas, inbox, boards)
 │   ├── app/             #   routes: /clock-tower /hawkins-lab /arcade /garage
 │   │                    #           /ghost-lab /front-desk /video-store /mall /vault
-│   └── components/      #   retro design system on Tailwind + shadcn/ui
+│   └── components/      #   hand-built semantic React components styled with Tailwind tokens
 ├── api/                 # Hono HTTP API + SSE; policy engine lives here
 │   └── src/
 │       ├── routes/      #   tasks, agents, approvals, memory, integrations, audit
