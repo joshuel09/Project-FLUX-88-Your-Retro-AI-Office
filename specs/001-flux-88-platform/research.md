@@ -52,10 +52,13 @@
 
 ## D6. LLM provider abstraction
 
-- **Decision**: `packages/llm` exposes `LLMProvider` (complete/stream + token usage);
-  adapters: `ClaudeProvider` (`@anthropic-ai/sdk`, default `claude-sonnet-5-5`, opt-in
-  `claude-opus-5-5` per agent budget) and `MockProvider` (deterministic, scenario-scripted
-  for tests/demo).
+- **Decision**: `packages/llm` exposes `LLMProvider` completion and usage accounting;
+  adapters: `ClaudeProvider` (`@anthropic-ai/sdk`, model selected explicitly by
+  `ANTHROPIC_MODEL`) and `MockProvider` (deterministic, scenario-scripted for tests/demo).
+- **Implemented in Phase 2**: Claude is selected only when `MOCK_LLM=false`; the default
+  remains mock mode. Cost rates are explicit environment settings per model so prices are
+  not silently inferred from a stale built-in table. Model choice is currently global;
+  per-agent model routing remains future work.
 - **Rationale**: Brief requires Claude-first with room for others; mock-first satisfies
   Principle V and SC-001.
 - **Alternatives**: Vercel AI SDK (nice streaming helpers but another abstraction layer

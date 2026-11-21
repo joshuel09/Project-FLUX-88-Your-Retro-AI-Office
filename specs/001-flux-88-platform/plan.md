@@ -12,8 +12,8 @@ Next.js dashboard, Hono API, BullMQ worker, PostgreSQL/Redis — a typed agent r
 default-deny policy/approval engine enforced in the API layer, a pgvector-backed Memory
 Vault, and adapter-pattern connectors (GitHub/Discord/Trello) that are mocked for local
 development. Phase 1 delivers the full product surface against a deterministic mock LLM;
-Phase 2 swaps in real Claude calls behind a provider abstraction without changing the
-surrounding architecture.
+Phase 2 adds opt-in real Claude calls behind the same provider abstraction without changing
+the surrounding architecture. Mock mode remains the local default.
 
 ## Technical Context
 
@@ -216,9 +216,10 @@ with **mock** LLM, persistent state, Memory Vault (keyword search required; vect
 with local mock embedder), approval engine + inbox (local actions), full dashboard with all
 nine areas, audit trail, owner auth, Docker Compose up with zero credentials.
 
-Out (deferred): real LLM calls (P2), durable multi-step recovery beyond restart-safety
-(P2), QA automation by EGON (P2), GitHub/Discord live connectors + webhooks (P3), Trello
-(P4), video/sales pipelines (P4).
+Out (deferred): durable multi-step recovery beyond restart-safety (P2), QA automation by
+EGON (P2), GitHub/Discord live connectors + webhooks (P3), Trello (P4), video/sales
+pipelines (P4). Phase 2 Claude provider support is implemented; it requires explicit
+model and cost-rate environment settings and is opt-in.
 
 ## Prioritized Delivery Sequence
 
@@ -235,8 +236,9 @@ Out (deferred): real LLM calls (P2), durable multi-step recovery beyond restart-
    outbox.
 6. **P1 slice 5 — US4 hardening**: restart/failure-injection tests, budgets surface,
    acceptance suite for scenarios 1–3, 6–10 (mock), demo polish.
-7. **Phase 2** real LLM execution → **Phase 3** GitHub/Discord → **Phase 4** Trello +
-   content pipelines (each via `/speckit-tasks` and owner GO per phase).
+7. **Phase 2** real LLM execution (Claude provider implemented; per-agent model routing
+   remains future work) → **Phase 3** GitHub/Discord → **Phase 4** Trello + content
+   pipelines (each via `/speckit-tasks` and owner GO per phase).
 
 ## Risks & Mitigations
 
