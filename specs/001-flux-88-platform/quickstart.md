@@ -1,6 +1,6 @@
 # Quickstart and validation guide: FLUX-88
 
-Verified against main commit `6a6558fe7f4684d6fd7dd1d5f94a1d27d40d4107` on 2026-11-16. This guide describes the mock-first Phase 1 implementation. Planned behavior is labeled; passing a focused test does not mean every user flow is complete.
+This guide covers the mock-first default and opt-in Claude provider. External connectors remain mocked; a live model call does not give agents live external-action tools. Planned behavior is labeled; passing a focused test does not mean every user flow is complete.
 
 ## Requirements
 
@@ -34,6 +34,20 @@ Open [http://localhost:3000](http://localhost:3000). On first run, the login for
 
 The API and worker use process environment variables plus defaults from `packages/config`; they do not load `.env` themselves. The commands above export the copied values into the shell. Export any custom values before starting the stack. Do not use the sample session secret outside a local demo.
 
+## Optional Claude execution
+
+Mock mode stays enabled by default and needs no paid credentials. To use Claude, edit your local `.env` and set:
+
+```dotenv
+MOCK_LLM=false
+ANTHROPIC_API_KEY=your-private-key
+ANTHROPIC_MODEL=your-enabled-model-id
+ANTHROPIC_INPUT_COST_CENTS_PER_MILLION=your-model-input-rate
+ANTHROPIC_OUTPUT_COST_CENTS_PER_MILLION=your-model-output-rate
+```
+
+The rates are cents per million tokens for the selected model. The runner records an estimate rounded up to whole cents. Source `.env` into the shell as shown above and restart `pnpm dev`; both API and worker use the selected mode. Do not commit `.env` or put a real key in command history, logs, tests, or memory. SDK retries are disabled so the durable worker's bounded retry policy remains authoritative. CI uses a fake HTTP response and never needs a live Claude credential.
+
 ## Phase 1 demo
 
 Use [`docs/demo-phase-1.md`](../../docs/demo-phase-1.md) for the short presenter script. It demonstrates the configured agents, mock delegation, dependency view, memory attribution, and mock connector status. The default demo does not call a live LLM or external connector.
@@ -43,6 +57,7 @@ Use [`docs/demo-phase-1.md`](../../docs/demo-phase-1.md) for the short presenter
 | Scenario | What is verified | Where to run it |
 |---|---|---|
 | 1. Delegation | DOC decomposes the tested owner goal into three specialist subtasks; the browser shows live completion, dependency edges, and a handoff timeline. Runs through the mock provider. | `apps/worker/src/orchestrator/doc.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/release-gate.spec.ts` |
+| Phase 2 provider | Claude request/response mapping, explicit usage-cost rates, no SDK retry, configured provider selection, and bounded worker retry with a fake Claude response. | `pnpm --filter @flux88/llm test`; `pnpm --filter @flux88/config test`; `pnpm --filter @flux88/worker exec vitest run src/runner/claude.integration.test.ts` |
 | 2. Restart recovery | A disposable harness writes task, run, approval, grant, memory, outbox, and audit fixtures, restarts Postgres and Redis, checks persisted records, then verifies one interrupted worker run recovers. It does not restart or inspect the demo database. | `pnpm --dir e2e exec playwright test tests/restart.spec.ts --workers=1` |
 | 3. Memory attribution | Service tests check agent attribution and write rules; the worker test checks policy-scoped retrieval, untrusted prompt framing, and validated agent writes. The browser test saves owner knowledge, searches, inspects verification status, and revokes the entry. | `packages/memory/src/service.integration.test.ts`, `apps/worker/src/runner/memory.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/us3-memory-vault.spec.ts` |
 | 4. Approval lifecycle | API integration tests cover owner reauthentication, immutable decisions, expiry, one-time grants, and audit records. The approval inbox browser test uses a stubbed API fixture; a full browser-to-worker approval journey is not verified by that test. | `apps/api/src/policy/approvals.integration.test.ts`; `pnpm --dir e2e exec playwright test tests/us2-approval-inbox.spec.ts` |

@@ -3,6 +3,7 @@
  * Phase 2). Consumers depend on the LLMProvider interface only.
  */
 export type { CompletionRequest, CompletionResult, LLMProvider, LLMUsage } from './provider.js';
+export { ClaudeProvider, DEFAULT_CLAUDE_TIMEOUT_MS, type ClaudeProviderOptions } from './claude.js';
 export { assemblePrompt, tagUntrustedContent, UNTRUSTED_SOURCES, type UntrustedContent, type UntrustedSource } from './prompt-assembly.js';
 export {
   DECOMPOSE_PREFIX,

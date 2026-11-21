@@ -5,10 +5,10 @@
  */
 import { loadConfig } from '@flux88/config';
 import { createDb } from '@flux88/db';
-import { MockProvider } from '@flux88/llm';
 
 import { MAX_PARALLEL_DEFAULT } from './constants.js';
 import type { WorkerDeps } from './deps.js';
+import { createLlmProvider } from './provider.js';
 import { createQueueBundle } from './queues/index.js';
 import { reconcile } from './reconcile.js';
 import { startOutboxDispatcher } from './outbox.js';
@@ -25,8 +25,7 @@ const db = createDb(config.WORKER_DATABASE_URL);
 await assertWorkerDatabaseRole(db);
 const bundle = createQueueBundle(config.REDIS_URL);
 
-// Phase 1 is mock-only; Phase 2 selects ClaudeProvider when MOCK_LLM=false.
-const provider = new MockProvider();
+const provider = createLlmProvider(config);
 
 const deps: WorkerDeps = {
   db,

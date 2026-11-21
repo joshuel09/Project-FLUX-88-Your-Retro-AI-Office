@@ -5,6 +5,11 @@
  */
 import { z } from 'zod';
 
+const optionalCostRate = z.preprocess(
+  (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+  z.coerce.number().finite().nonnegative().optional(),
+);
+
 const envSchema = z.object({
   DATABASE_URL: z.string().url().default('postgres://flux88:flux88_local_dev@localhost:5488/flux88'),
   WORKER_DATABASE_URL: z.string().url().optional(),
@@ -16,12 +21,28 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
-  ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().trim().min(1).optional(),
+  ANTHROPIC_MODEL: z.string().trim().min(1).optional(),
+  ANTHROPIC_INPUT_COST_CENTS_PER_MILLION: optionalCostRate,
+  ANTHROPIC_OUTPUT_COST_CENTS_PER_MILLION: optionalCostRate,
   GITHUB_CONNECTOR: z.enum(['mock', 'live']).default('mock'),
   DISCORD_CONNECTOR: z.enum(['mock', 'live']).default('mock'),
   TRELLO_CONNECTOR: z.enum(['mock', 'live']).default('mock'),
   QUIET_HOURS: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/).default('22:00-07:00'),
   MAX_PARALLEL_AGENT_RUNS: z.coerce.number().int().positive().max(18).default(3),
+}).superRefine((config, ctx) => {
+  if (config.MOCK_LLM) return;
+  const requiredLiveFields = [
+    'ANTHROPIC_API_KEY',
+    'ANTHROPIC_MODEL',
+    'ANTHROPIC_INPUT_COST_CENTS_PER_MILLION',
+    'ANTHROPIC_OUTPUT_COST_CENTS_PER_MILLION',
+  ] as const;
+  for (const field of requiredLiveFields) {
+    if (config[field] === undefined || config[field] === '') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: 'is required when MOCK_LLM=false' });
+    }
+  }
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

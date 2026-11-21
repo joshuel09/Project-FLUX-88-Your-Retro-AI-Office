@@ -136,3 +136,13 @@ One PR per slice (per the owner's batching preference): Phase 2 foundational →
 - [x] T060 [HIGH] Implement an audited deletion path for stale or incorrect memory entries with defined history-retention behavior; current memory supports correction and revocation, but has no deletion operation (FR-022; gap: partial).
 - [x] T061 [HIGH] Add least-privilege service credentials and authenticated agent API access; current API routes use owner cookie-session authentication, with no agent service credential flow (FR-072; gap: missing).
 - [x] T062 [MEDIUM] Document the implemented Tailwind design system and hand-built component conventions; preserve the existing axe accessibility release gate and align plan/research/task docs (plan §Technical Context/§Constitution Check, T002).
+
+## Phase 10: US1 — Phase 2 real LLM execution
+
+**Goal**: Add opt-in Claude execution behind the existing provider contract while preserving deterministic, zero-credential mock mode. **Independent test**: provider contract tests with a mocked Anthropic client; no live credential required in CI.
+
+- [x] T063 [US1] Add `ClaudeProvider` behind `LLMProvider`, add the Anthropic SDK dependency, map system/user prompts and response usage, bound provider timeouts, and cover success/error/empty-response behavior with a mocked client in `packages/llm/src/claude.ts` and `packages/llm/src/claude.test.ts` (FR-060/061, Constitution III/V).
+- [x] T064 [US1] Validate live-provider configuration (`ANTHROPIC_API_KEY`, explicit `ANTHROPIC_MODEL`, and input/output cost rates per million tokens) and select Claude only when `MOCK_LLM=false`; keep mock mode as the default and test configuration/provider selection in `packages/config/src/index.ts`, `packages/config/src/index.test.ts`, and `apps/worker/src/provider.ts` (FR-016/060, plan Technical Context/Security Boundary 6).
+- [x] T065 [US1] Verify bounded Claude failures preserve worker retry/reconciliation behavior and retain usage/budget/audit accounting through the runner using a fake provider in `apps/worker/src/runner/claude.integration.test.ts` (FR-016/061, SC-009; no external API credentials).
+- [x] T066 [US1] Document opt-in Claude setup, model selection, usage-cost estimation, secret handling, and zero-credential mock mode in `env.example`, `README.md`, and `specs/001-flux-88-platform/quickstart.md` (FR-060, SC-001).
+- [x] T067 Add and synchronize a concise shared Codex/Claude task-execution skill that routes to existing project workflows and records the requested review/merge boundary in `.agents/skills/ai-office-task-execution/SKILL.md` (project workflow).

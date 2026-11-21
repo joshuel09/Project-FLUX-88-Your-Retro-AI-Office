@@ -4,7 +4,7 @@ FLUX-88 is a self-hosted, single-owner AI office with a retro dashboard. It is b
 
 ## Status
 
-Phase 1 is a **mock-first implementation in progress**. The repository includes a dashboard with nine office areas, 18 configured agent profiles, DOC task delegation, a Memory Vault, an owner approval inbox, and mock connector health. The default worker uses a mock LLM provider, and the GitHub, Discord, and Trello connectors use mock data. This is not a live autonomous office: live model and external-service adapters are not part of the current implementation.
+FLUX-88 is a **mock-first implementation with opt-in Claude execution**. It includes a dashboard with nine office areas, 18 configured agent profiles, DOC task delegation, a Memory Vault, an owner approval inbox, and mock connector health. The worker uses the deterministic mock LLM by default; setting the Claude environment variables enables bounded live model calls through the same provider interface. GitHub, Discord, and Trello connectors still use mock data, and agents do not have live external-action tools.
 
 See the [release gate](docs/release-gate.md) for verified scenarios and limits, and the [Phase 1 demo script](docs/demo-phase-1.md) for a guided walkthrough.
 
@@ -30,6 +30,8 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000). On first run, enter your email and a password with at least 12 characters; that creates the single owner account. The seed adds the 18 agent profiles, budgets, mock connectors, and sample tasks. The default service ports are web `3000`, API `3001`, Postgres `5488`, and Redis `6388`.
 
 `env.example` lists local demo defaults, including a separate worker login. Copying a `.env` file alone does not load overrides into the processes; the commands above export those values in the shell. The worker refuses to start until its login is provisioned after migrations. Before exposing a deployment beyond local demo use, set unique database credentials and generate a new `SESSION_SECRET`. Do not add real credentials to the repository.
+
+To opt into Claude, put `MOCK_LLM=false`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, and the model's input/output cost rates in your local `.env`, then restart the app. Cost rates are cents per million tokens and are configured explicitly to avoid stale built-in pricing. The runner reports the resulting estimate rounded up to whole cents. Keep `.env` private; no live key is needed for mock mode.
 
 Stop the app with `Ctrl+C`; stop the database services with `pnpm db:down`. Compose keeps its named data volumes unless you remove them separately.
 
