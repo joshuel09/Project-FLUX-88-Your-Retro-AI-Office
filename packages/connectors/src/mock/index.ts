@@ -1,5 +1,11 @@
 import type { ConnectorAdapter, ConnectorProvider } from '../adapter.js';
 
+export {
+  GITHUB_FEEDBACK_MOCK_FIXTURES,
+  MAX_GITHUB_FEEDBACK_EXCERPT_LENGTH,
+} from './github.js';
+export type { GitHubFeedbackMockFixture, GitHubFeedbackMockScenario } from './github.js';
+
 function mockAdapter(provider: ConnectorProvider, label: string): ConnectorAdapter {
   return {
     provider,
