@@ -10,8 +10,8 @@
 
 **Purpose**: Define provider contracts and safe configuration, then persist external identities before implementing sync or delivery.
 
-- [ ] T001 [P] Add normalized GitHub feedback and sync-cursor contracts to `packages/connectors/src/adapter.ts` with contract tests in `packages/connectors/src/adapter.test.ts`; preserve the existing read-only overview interface (FR-P3-001, FR-P3-003).
-- [ ] T002 Add deterministic GitHub feedback mock fixtures for mapped, unmapped, duplicate, oversized, and hostile-content cases in `packages/connectors/src/mock/github.ts` and `packages/connectors/src/mock/github.test.ts` (FR-P3-003, FR-P3-004, FR-P3-009).
+- [x] T001 [P] Add normalized GitHub feedback and sync-cursor contracts to `packages/connectors/src/adapter.ts` with contract tests in `packages/connectors/src/adapter.test.ts`; preserve the existing read-only overview interface (FR-P3-001, FR-P3-003).
+- [x] T002 Add deterministic GitHub feedback mock fixtures for mapped, unmapped, duplicate, oversized, and hostile-content cases in `packages/connectors/src/mock/github.ts` and `packages/connectors/src/mock/github.test.ts` (FR-P3-003, FR-P3-004, FR-P3-009).
 - [ ] T003 [P] Add validated GitHub/Discord configuration for credentials, repository allowlists, owner/guild/channel IDs, and allowed notification templates in `packages/config/src/index.ts` with tests in `packages/config/src/index.test.ts` and blank examples in `env.example`; never include secret values in errors, and make runtime provider selection fail closed until each live adapter lands. Test those defaults and failure paths (FR-P3-006, FR-P3-009, FR-P3-010, FR-P3-012).
 - [ ] T004 [P] Add persistent `external_feedback` records, unique Discord interaction IDs, and unique notification delivery interval with approval batch reference in `packages/db/src/schema/index.ts` and `packages/db/src/migrations/`; cover duplicate conflicts and constraints in `packages/db/src/schema.integration.test.ts` (FR-P3-003, FR-P3-004, FR-P3-007, FR-P3-013).
 
