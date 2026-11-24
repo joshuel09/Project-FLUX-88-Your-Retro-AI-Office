@@ -1,6 +1,7 @@
 import {
   boolean,
   check,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -14,7 +15,7 @@ import {
   uuid,
   vector,
 } from 'drizzle-orm/pg-core';
-import { isNull, sql } from 'drizzle-orm';
+import { isNotNull, isNull, sql } from 'drizzle-orm';
 
 import { AGENT_IDS, CRITICAL_ACTION_CATEGORIES, DEPARTMENTS, OFFICE_AREAS, TASK_STATUSES } from '@flux88/core';
 
@@ -35,6 +36,9 @@ export const actorTypeEnum = pgEnum('actor_type', ['owner', 'agent', 'system', '
 export const connectorProviderEnum = pgEnum('connector_provider', ['github', 'discord', 'trello', 'mock']);
 export const connectorModeEnum = pgEnum('connector_mode', ['read_only', 'write_enabled']);
 export const notificationChannelEnum = pgEnum('notification_channel', ['dashboard', 'discord']);
+export const externalFeedbackStateEnum = pgEnum('external_feedback_state', ['pending', 'linked', 'resolved', 'ignored']);
+export const discordInteractionStateEnum = pgEnum('discord_interaction_state', ['received', 'processing', 'completed', 'failed']);
+export const notificationDeliveryStatusEnum = pgEnum('notification_delivery_status', ['pending', 'attempting', 'sent', 'failed']);
 export const outboxStatusEnum = pgEnum('outbox_status', ['pending', 'dispatched', 'failed', 'halted_revalidation']);
 
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
@@ -184,6 +188,7 @@ export const approvalRequests = pgTable('approval_requests', {
   createdAt: createdAt(),
 }, (t) => [
   uniqueIndex('approval_requests_dedupe_idx').on(t.dedupeKey),
+  uniqueIndex('approval_requests_id_batch_expiry_idx').on(t.id, t.batchId, t.expiresAt),
   check('approval_request_actor_check', sql`(${t.requestingActorType} = 'owner' AND ${t.requestingAgentId} IS NULL) OR (${t.requestingActorType} = 'agent' AND ${t.requestingAgentId} IS NOT NULL)`),
 ]);
 
@@ -283,6 +288,51 @@ export const externalLinks = pgTable(
   (t) => [uniqueIndex('external_links_unique_idx').on(t.provider, t.externalType, t.externalId)],
 );
 
+/** External GitHub content stays bounded and untrusted until owner triage. */
+export const externalFeedback = pgTable(
+  'external_feedback',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    provider: connectorProviderEnum('provider').notNull().default('github'),
+    externalId: text('external_id').notNull(),
+    externalType: text('external_type').notNull(),
+    externalLinkId: uuid('external_link_id').references(() => externalLinks.id, { onDelete: 'set null' }),
+    taskId: uuid('task_id').references(() => tasks.id, { onDelete: 'set null' }),
+    assigneeAgentId: agentIdEnum('assignee_agent_id'),
+    authorLogin: text('author_login').notNull(),
+    bodyExcerpt: text('body_excerpt').notNull(),
+    sourceUrl: text('source_url').notNull(),
+    state: externalFeedbackStateEnum('state').notNull().default('pending'),
+    provenance: text('provenance').notNull().default('untrusted'),
+    receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex('external_feedback_provider_id_idx').on(t.provider, t.externalId),
+    index('external_feedback_task_state_idx').on(t.taskId, t.state),
+    check('external_feedback_provider_check', sql`${t.provider} = 'github'`),
+    check('external_feedback_provenance_check', sql`${t.provenance} = 'untrusted'`),
+    check('external_feedback_excerpt_length_check', sql`char_length(${t.bodyExcerpt}) <= 1000`),
+  ],
+);
+
+/** Replay key and minimal lifecycle only; interaction tokens and bodies are not stored. */
+export const discordInteractions = pgTable(
+  'discord_interactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    provider: connectorProviderEnum('provider').notNull().default('discord'),
+    interactionId: text('interaction_id').notNull(),
+    state: discordInteractionStateEnum('state').notNull().default('received'),
+    receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex('discord_interactions_provider_id_idx').on(t.provider, t.interactionId),
+    check('discord_interactions_provider_check', sql`${t.provider} = 'discord'`),
+  ],
+);
+
 export const notifications = pgTable(
   'notifications',
   {
@@ -292,13 +342,32 @@ export const notifications = pgTable(
     approvalRequestId: uuid('approval_request_id').references(() => approvalRequests.id, {
       onDelete: 'set null',
     }),
+    approvalBatchId: uuid('approval_batch_id'),
+    approvalExpiresAt: timestamp('approval_expires_at', { withTimezone: true }),
     body: text('body').notNull(),
     dedupeKey: text('dedupe_key').notNull(),
     quietHoursDeferred: boolean('quiet_hours_deferred').notNull().default(false),
+    deliveryInterval: timestamp('delivery_interval', { withTimezone: true }),
+    deliveryStatus: notificationDeliveryStatusEnum('delivery_status'),
+    deliveryAttempts: integer('delivery_attempts').notNull().default(0),
+    lastAttemptAt: timestamp('last_attempt_at', { withTimezone: true }),
     sentAt: timestamp('sent_at', { withTimezone: true }),
     createdAt: createdAt(),
   },
-  (t) => [index('notifications_dedupe_idx').on(t.dedupeKey)],
+  (t) => [
+    index('notifications_dedupe_idx').on(t.dedupeKey),
+    uniqueIndex('notifications_delivery_interval_unique_idx').on(t.channel, t.dedupeKey, t.deliveryInterval).where(isNotNull(t.deliveryInterval)),
+    check('notifications_delivery_attempts_check', sql`${t.deliveryAttempts} >= 0`),
+    check('notifications_approval_batch_request_check', sql`${t.approvalBatchId} IS NULL OR ${t.approvalRequestId} IS NOT NULL`),
+    check('notifications_approval_batch_channel_check', sql`${t.approvalBatchId} IS NULL OR ${t.channel} = 'discord'`),
+    check('notifications_approval_expiry_channel_check', sql`${t.approvalExpiresAt} IS NULL OR ${t.channel} = 'discord'`),
+    check('notifications_approval_batch_expiry_pair_check', sql`(${t.approvalBatchId} IS NULL) = (${t.approvalExpiresAt} IS NULL)`),
+    foreignKey({
+      name: 'notifications_approval_batch_fk',
+      columns: [t.approvalRequestId, t.approvalBatchId, t.approvalExpiresAt],
+      foreignColumns: [approvalRequests.id, approvalRequests.batchId, approvalRequests.expiresAt],
+    }),
+  ],
 );
 
 export const budgets = pgTable(

@@ -50,6 +50,13 @@
       "when": 1794942382941,
       "tag": "0006_wild_meteorite",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795529929839,
+      "tag": "0007_cooing_ma_gnuci",
+      "breakpoints": true
     }
   ]
 }
