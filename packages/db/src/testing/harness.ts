@@ -24,6 +24,8 @@ export async function truncateMutableTables(db: ReturnType<typeof connectTestDb>
       approval_grants,
       approval_requests,
       notifications,
+      discord_interactions,
+      external_feedback,
       external_links,
       artifacts,
       agent_runs,
