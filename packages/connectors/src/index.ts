@@ -16,3 +16,24 @@ export {
   MAX_GITHUB_FEEDBACK_EXCERPT_LENGTH,
 } from './mock/index.js';
 export type { GitHubFeedbackMockFixture, GitHubFeedbackMockScenario } from './mock/index.js';
+export {
+  createGitHubClient,
+  GitHubAuthenticationError,
+  GitHubClientError,
+  GitHubPermissionError,
+  GitHubRateLimitError,
+  GitHubResponseError,
+} from './github/client.js';
+export type {
+  GitHubApiComment,
+  GitHubApiCommit,
+  GitHubApiIssue,
+  GitHubApiPullRequest,
+  GitHubApiRepository,
+  GitHubApiReview,
+  GitHubApiUser,
+  GitHubClientOptions,
+  GitHubReadClient,
+  GitHubReadOptions,
+  GitHubReadResult,
+} from './github/client.js';
