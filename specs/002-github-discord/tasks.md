@@ -21,7 +21,7 @@
 
 **Independent Test**: Sync mocked feedback for an externally linked PR; verify one untrusted record and activity event link to the task/assignee; repeat sync and verify no duplicates. Verify unmapped items surface to the owner without auto-assignment.
 
-- [ ] T005 [US1] Implement bounded, read-only GitHub reads for allowlisted repositories, commits, pull requests, issues, comments, and review feedback with conditional requests, typed rate-limit/auth errors, and injected transport in `packages/connectors/src/github/client.ts`; add contract tests in `packages/connectors/src/github/client.test.ts` (FR-P3-001, FR-P3-004, FR-P3-010).
+- [x] T005 [US1] Implement bounded, read-only GitHub reads for allowlisted repositories, commits, pull requests, issues, comments, and review feedback with conditional requests, typed rate-limit/auth errors, and injected transport in `packages/connectors/src/github/client.ts`; add contract tests in `packages/connectors/src/github/client.test.ts` (FR-P3-001, FR-P3-004, FR-P3-010).
 - [ ] T006 [US1] Implement idempotent feedback ingestion using provider identity and explicit `external_links` mapping in `apps/worker/src/connectors/github-sync.ts`; test duplicate delivery, missing mapping, current assignee attribution, and untrusted provenance in `apps/worker/src/connectors/github-sync.test.ts` (FR-P3-002, FR-P3-003, FR-P3-004, FR-P3-005).
 - [ ] T007 [US1] Expose linked/unmatched feedback and add an audited owner action to link an unmatched PR to an existing task through the authenticated activity API/SSE and accessible UI in `apps/api/src/routes/feedback.ts`, `apps/web/app/(office)/clock-tower/activity/page.tsx`, and their tests (FR-P3-002, FR-P3-005, FR-P3-010).
 
