@@ -6,6 +6,8 @@ Extend existing records only where they already represent the right concept. Pro
 
 Reuse `external_links` as the explicit link from a GitHub pull request to an internal task. Its `(provider, external_type, external_id)` unique key is the mapping authority. Do not infer a mapping from titles, branch names, or external text.
 
+For GitHub pull requests, use `external_type = 'pull_request'` and the canonical `external_id = lower-case '<owner>/<repo>#<number>'`. Feedback sync may read this mapping but never create one.
+
 ## External feedback
 
 Add a durable feedback record with:

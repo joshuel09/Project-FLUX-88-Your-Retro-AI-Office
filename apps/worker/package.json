@@ -8,12 +8,13 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "start": "tsx src/index.ts",
-    "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts'",
-    "test:integration": "vitest run --no-file-parallelism .integration.test.ts"
+    "test": "vitest run --passWithNoTests --exclude '**/*.integration.test.ts' --exclude 'src/connectors/github-sync.test.ts'",
+    "test:integration": "vitest run --no-file-parallelism .integration.test.ts src/connectors/github-sync.test.ts"
   },
   "dependencies": {
     "@flux88/agents": "workspace:*",
     "@flux88/config": "workspace:*",
+    "@flux88/connectors": "workspace:*",
     "@flux88/core": "workspace:*",
     "@flux88/db": "workspace:*",
     "@flux88/llm": "workspace:*",
