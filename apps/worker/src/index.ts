@@ -12,6 +12,7 @@ import { createLlmProvider } from './provider.js';
 import { createQueueBundle } from './queues/index.js';
 import { reconcile } from './reconcile.js';
 import { startOutboxDispatcher } from './outbox.js';
+import { startFeedbackReminderScheduler } from './connectors/reminders.js';
 import { assertWorkerDatabaseRole } from './worker-db-role.js';
 
 const config = loadConfig();
@@ -42,6 +43,13 @@ bundle.startWorkers(deps, concurrency);
 const dispatcher = startOutboxDispatcher(db, () => {
   console.error('[flux88-worker] outbox polling failed; retrying on next poll');
 });
+const reminderScheduler = config.DISCORD_NOTIFICATION_TEMPLATES.includes('review_reminder')
+  ? startFeedbackReminderScheduler(db, {
+      enabled: true,
+      intervalHours: config.DISCORD_REMINDER_INTERVAL_HOURS,
+      quietHours: config.QUIET_HOURS,
+    }, () => console.error('[flux88-worker] reminder scheduling failed; retrying on next poll'))
+  : null;
 console.log(
   `[flux88-worker] booted (mock LLM: ${config.MOCK_LLM}, concurrency: ${concurrency}, reconciled: ${resumed})`,
 );
@@ -49,6 +57,6 @@ console.log(
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     console.log(`[flux88-worker] ${signal} received, shutting down`);
-    void Promise.all([dispatcher.close(), bundle.close()]).finally(() => process.exit(0));
+    void Promise.all([dispatcher.close(), reminderScheduler?.close(), bundle.close()]).finally(() => process.exit(0));
   });
 }

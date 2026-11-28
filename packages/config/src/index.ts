@@ -48,8 +48,9 @@ const envSchema = z.object({
   DISCORD_GUILD_ID: z.preprocess((value) => value === '' ? undefined : value, discordSnowflake.optional()),
   DISCORD_CHANNEL_ID: z.preprocess((value) => value === '' ? undefined : value, discordSnowflake.optional()),
   DISCORD_NOTIFICATION_TEMPLATES: commaSeparated(z.enum(['task_update', 'review_reminder'])),
+  DISCORD_REMINDER_INTERVAL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
   TRELLO_CONNECTOR: z.enum(['mock', 'live']).default('mock'),
-  QUIET_HOURS: z.string().regex(/^\d{2}:\d{2}-\d{2}:\d{2}$/).default('22:00-07:00'),
+  QUIET_HOURS: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d$/).default('22:00-07:00'),
   MAX_PARALLEL_AGENT_RUNS: z.coerce.number().int().positive().max(18).default(3),
 }).superRefine((config, ctx) => {
   if (!config.MOCK_LLM) {
