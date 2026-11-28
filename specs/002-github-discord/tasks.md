@@ -31,7 +31,7 @@
 
 **Independent Test**: Schedule repeated reminder jobs for one task; verify one delivery per configured interval, no delivery during quiet hours, and one deferred send afterward. Without owner approval of an exact batch, all items remain dashboard-only; with approval, only listed messages send once.
 
-- [ ] T008 [US2] Add durable reminder scheduling with configured interval, idempotency key, quiet-hours handling, and bounded retries in `apps/worker/src/connectors/reminders.ts`; test with a fixed clock and duplicate jobs (FR-P3-004, FR-P3-005).
+- [x] T008 [US2] Add durable reminder scheduling with configured interval, idempotency key, quiet-hours handling, and bounded retries in `apps/worker/src/connectors/reminders.ts`; test with a fixed clock and duplicate jobs (FR-P3-004, FR-P3-005).
 - [ ] T009 [US2] Implement the Discord outbound adapter with configured destination allowlists, bounded server-defined messages, and typed rate-limit/auth errors in `packages/connectors/src/discord/client.ts`; add contract tests using injected fetch (FR-P3-006, FR-P3-010, FR-P3-012).
 - [ ] T010 [US2] Add exact, time-limited notification batches to the existing approval inbox and dispatch only owner-approved messages through separate single-use `external_communication` grants in the grant-bound outbox; persist delivery attempts/results in `apps/worker/src/connectors/discord-notifications.ts` and test unapproved, expired, modified, restart, and duplicate cases (FR-P3-008, FR-P3-013).
 

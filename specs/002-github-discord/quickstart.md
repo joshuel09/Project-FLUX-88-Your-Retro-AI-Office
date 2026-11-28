@@ -2,6 +2,8 @@
 
 All validation runs in mock mode without GitHub or Discord credentials.
 
+The worker schedules review reminders only when `review_reminder` is enabled in `DISCORD_NOTIFICATION_TEMPLATES`. `DISCORD_REMINDER_INTERVAL_HOURS` defaults to 24 and accepts 1–168 hours. `QUIET_HOURS` defaults to `22:00-07:00` and uses the worker host's local time. Scheduled records remain dashboard-visible and pending; Discord delivery still requires the exact owner-approved batch implemented by T010.
+
 1. Start PostgreSQL and Redis using the repository quickstart, then apply migrations and seed data.
 2. Run connector contract tests with injected mock GitHub and Discord providers.
 3. In a disposable integration database, map a fake GitHub PR to a task, ingest a review comment, and verify it appears once with its source URL and untrusted provenance.

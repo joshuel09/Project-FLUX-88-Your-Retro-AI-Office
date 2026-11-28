@@ -50,6 +50,18 @@ describe('LLM provider configuration', () => {
 });
 
 describe('GitHub and Discord configuration', () => {
+  it('uses a bounded reminder interval with a 24-hour default', () => {
+    expect(loadConfig({}).DISCORD_REMINDER_INTERVAL_HOURS).toBe(24);
+    expect(loadConfig({ DISCORD_REMINDER_INTERVAL_HOURS: '168' }).DISCORD_REMINDER_INTERVAL_HOURS).toBe(168);
+    expect(() => loadConfig({ DISCORD_REMINDER_INTERVAL_HOURS: '0' })).toThrow(/DISCORD_REMINDER_INTERVAL_HOURS/);
+    expect(() => loadConfig({ DISCORD_REMINDER_INTERVAL_HOURS: '169' })).toThrow(/DISCORD_REMINDER_INTERVAL_HOURS/);
+  });
+
+  it('rejects quiet-hour values outside the 24-hour clock', () => {
+    expect(() => loadConfig({ QUIET_HOURS: '24:00-07:00' })).toThrow(/QUIET_HOURS/);
+    expect(() => loadConfig({ QUIET_HOURS: '22:60-07:00' })).toThrow(/QUIET_HOURS/);
+  });
+
   it('keeps mock connectors enabled with empty allowlists and no credentials by default', () => {
     expect(loadConfig({})).toMatchObject({
       GITHUB_CONNECTOR: 'mock',
